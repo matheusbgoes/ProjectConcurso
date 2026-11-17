@@ -432,6 +432,7 @@
             background: var(--surface);
             transition: border-color 0.15s, background-color 0.15s;
         }
+        .options-list li:focus { outline: none; }
         .options-list:not(.answered) li:hover { border-color: var(--accent); background: #fafcff; }
         .options-list.answered li { cursor: default; opacity: 0.6; }
         .options-list.answered li.correct {
@@ -731,7 +732,7 @@
             <button class="countdown-pill" id="countdown-pill" onclick="openConfigModal('profile')" title="Clique para ajustar a data da prova">
                 Definir data da prova
             </button>
-            <button class="btn btn-outline btn-sm" onclick="openConfigModal('ai')" title="Configurar concurso ou trocar prova com IA" style="min-height:32px;padding:4px 10px;">Configurar</button>
+            <button class="btn btn-outline btn-sm" onclick="openConfigModal('profile')" title="Configurar perfil, concurso ou IA" style="min-height:32px;padding:4px 10px;">Configurar</button>
             <button class="btn btn-outline btn-sm" id="theme-btn" onclick="toggleDarkMode()" title="Alternar tema claro/escuro" style="min-height:32px;padding:4px 10px;">Escuro</button>
         </div>
     </div>
@@ -846,6 +847,7 @@
                         Importar
                         <input type="file" accept=".json" style="display:none;" onchange="importBackup(event)">
                     </label>
+                    <button class="btn btn-outline btn-sm" onclick="clearHistory()" style="color:var(--red);">Limpar</button>
                 </div>
             </div>
             <div id="history-list"></div>
@@ -1076,7 +1078,7 @@ const quizData = [
         },
         {
             subject: "Língua Portuguesa",
-            q: "(FADE/UFPE - Português) Em 'Embora a equipe tenha atualizado o sistema, persistiram algumas falhas de latência', a oração destacada expressa ideia de:",
+            q: "(FADE/UFPE - Português) Em 'Embora a equipe tenha atualizado o sistema, persistiram algumas falhas de latência', a oração 'Embora a equipe tenha atualizado o sistema' expressa ideia de:",
             options: [
                 "A) Causa",
                 "B) Consequência",
@@ -2406,7 +2408,7 @@ function renderProvasTab() {
 
     const errCount = getErrorQuestionIndices().length;
     const errTag = document.getElementById('errors-count-tag');
-    if (errTag) errTag.innerText = errCount > 0 ? `${errCount} questões p/ revisar` : 'Revisão Inteligente';
+    if (errTag) errTag.innerText = errCount > 0 ? `${errCount} ${errCount === 1 ? 'questão' : 'questões'} p/ revisar` : 'Revisão Inteligente';
 
     const resumeBox = document.getElementById('resume-box');
     const startWrap = document.getElementById('start-daily-wrap');
@@ -2768,7 +2770,7 @@ function renderHistoryTab() {
                 <div class="history-top">
                     <div>
                         <strong style="font-size: 15px;">${dateBr}</strong>
-                        <span style="font-size: 12.5px; color: var(--text-muted); margin-left: 8px;">${total} questões • ${hits} acertos (${pct}%)</span>
+                        <span style="font-size: 12.5px; color: var(--text-muted); margin-left: 8px;">${total} ${total === 1 ? 'questão' : 'questões'} • ${hits} ${hits === 1 ? 'acerto' : 'acertos'} (${pct}%)</span>
                     </div>
                     <div style="display:flex; align-items:center; gap:8px;">
                         <span style="font-size: 12px; color: var(--text-muted);">⏱ ${formatSec(totalSec)} (méd ${formatSec(avgSec)}/q)</span>
@@ -2925,6 +2927,20 @@ function renderTipsTab() {
     }
 
     tipsEl.innerHTML = tips.join('');
+}
+
+function clearHistory() {
+    if (Object.keys(appState.dailyHistory || {}).length === 0) {
+        showToast('O histórico já está vazio.');
+        return;
+    }
+    if (!confirm('Limpar todo o histórico diário e a sessão em andamento deste perfil?')) return;
+    appState.dailyHistory = {};
+    appState.activeSession = null;
+    saveState();
+    renderHistoryTab();
+    renderProvasTab();
+    showToast('Histórico limpo com sucesso!');
 }
 
 function exportBackup() {
