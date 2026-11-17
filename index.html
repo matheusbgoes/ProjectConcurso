@@ -738,6 +738,29 @@
             align-items: start;
         }
         @media (max-width: 760px) { .setup-grid { grid-template-columns: 1fr; } }
+        .intro-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 14px;
+        }
+        @media (max-width: 820px) { .intro-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 500px) { .intro-grid { grid-template-columns: 1fr; } }
+        .intro-item {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 12.5px;
+            line-height: 1.45;
+            color: var(--text-muted);
+        }
+        .intro-item strong {
+            display: block;
+            color: var(--text);
+            font-size: 13px;
+            margin-bottom: 3px;
+        }
         .file-status {
             margin-top: 10px;
             padding: 10px 12px;
@@ -780,8 +803,26 @@
     <!-- TAB: SETUP INICIAL / MONTAGEM DA PROVA -->
     <section id="tab-setup" class="hidden">
         <div class="card" style="border-top: 4px solid var(--accent);">
-            <h2 style="font-size: 20px; font-weight: 700; margin: 0 0 6px;">Prepare seu ambiente de estudos</h2>
-            <p class="card-sub" style="font-size: 14px; margin: 0;">Envie os arquivos da sua prova, edital ou questões para montar seu simulado personalizado, ou comece com o modelo pronto.</p>
+            <h2 style="font-size: 20px; font-weight: 700; margin: 0 0 6px;">ProjectConcurso — Seu ambiente inteligente de estudos</h2>
+            <p class="card-sub" style="font-size: 14px; margin: 0;">Uma plataforma gratuita para organizar sua rotina diária de questões para qualquer concurso ou prova, no computador ou no celular.</p>
+            <div class="intro-grid">
+                <div class="intro-item">
+                    <strong>1. Monte com seus arquivos</strong>
+                    Envie listas de questões, editais ou pacotes JSON (ou use o assistente IA para gerar sua prova).
+                </div>
+                <div class="intro-item">
+                    <strong>2. Meta diária e pausa</strong>
+                    Estude no seu ritmo no PC ou celular (inclusive offline) e retome de onde parou a qualquer momento.
+                </div>
+                <div class="intro-item">
+                    <strong>3. Correção que ensina</strong>
+                    Saiba na hora <em>por que errou</em>, leia o gabarito comentado e consulte o guia de assuntos.
+                </div>
+                <div class="intro-item">
+                    <strong>4. Evolução semanal</strong>
+                    Acompanhe histórico diário, tempo por questão, % de acertos na semana e Caderno de Erros.
+                </div>
+            </div>
         </div>
 
         <div class="setup-grid">
