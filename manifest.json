@@ -1,7 +1,7 @@
 {
-  "name": "ProjectConcurso • UFPE/FADE",
+  "name": "ProjectConcurso",
   "short_name": "ProjectConcurso",
-  "description": "Plataforma de estudos diários para concursos de TI (UFPE/FADE) — Matheus Goes",
+  "description": "Plataforma de estudos diários para qualquer concurso ou prova — criado por Matheus Goes",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f8fafc",

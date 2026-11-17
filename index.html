@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#ffffff">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="manifest" href="./manifest.json">
-    <title>ProjectConcurso • UFPE/FADE — Matheus Goes</title>
+    <title>ProjectConcurso • Plataforma de Estudos</title>
     <style>
         :root {
             --bg: #f8fafc;
@@ -641,13 +641,14 @@
 <header class="topbar">
     <div class="topbar-inner">
         <div class="brand">
-            <h1>ProjectConcurso • UFPE/FADE</h1>
-            <span>Olá, Matheus Goes</span>
+            <h1 id="brand-title">ProjectConcurso • Simulado Modelo</h1>
+            <span id="brand-user">Olá, Estudante • <small style="opacity:0.8;">por Matheus Goes</small></span>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;">
-            <button class="countdown-pill" id="countdown-pill" onclick="openDateModal()" title="Clique para ajustar a data da prova">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <button class="countdown-pill" id="countdown-pill" onclick="openConfigModal('profile')" title="Clique para ajustar a data da prova">
                 Definir data da prova
             </button>
+            <button class="btn btn-outline btn-sm" onclick="openConfigModal('ai')" title="Configurar concurso ou trocar prova com IA" style="min-height:32px;padding:4px 10px;">⚙️ Meu Concurso</button>
             <button class="btn btn-outline btn-sm" id="theme-btn" onclick="toggleDarkMode()" title="Alternar tema claro/escuro" style="min-height:32px;padding:4px 9px;">🌙</button>
         </div>
     </div>
@@ -667,7 +668,7 @@
         <div class="card">
             <div class="card-header">
                 <div>
-                    <h2 class="card-title">Meta Diária — 50 Questões</h2>
+                    <h2 class="card-title" id="daily-goal-title">Meta Diária — 50 Questões</h2>
                     <p class="card-sub" id="daily-goal-sub">0 de 50 questões concluídas hoje</p>
                 </div>
                 <div style="display:flex;gap:6px;align-items:center;">
@@ -689,7 +690,7 @@
                 </div>
             </div>
             <div id="start-daily-wrap" style="margin-top: 14px;">
-                <button class="btn btn-primary btn-full" onclick="startSession('daily')">Iniciar Meta Diária (50 questões)</button>
+                <button class="btn btn-primary btn-full" id="start-daily-btn" onclick="startSession('daily')">Iniciar Meta Diária (50 questões)</button>
             </div>
         </div>
 
@@ -697,29 +698,29 @@
             <div class="card-header">
                 <div>
                     <h2 class="card-title">Modelos de Provas Diárias (Até a Prova)</h2>
-                    <p class="card-sub">Combinações prontas com diversos assuntos para sua rotina</p>
+                    <p class="card-sub">Combinações prontas com todas as matérias do concurso ativo</p>
                 </div>
             </div>
             <div class="exam-grid">
                 <button class="exam-option" onclick="startSession('model_balanced')">
-                    <span class="exam-tag">50 Questões • Proporcional</span>
+                    <span class="exam-tag" id="model-a-tag">Meta Diária • Proporcional</span>
                     <h3>Modelo A: Rotina Equilibrada</h3>
-                    <p>28 Infra/Redes + 12 Português + 6 Legislação + 4 Raciocínio Lógico. Mantém todas as matérias ativas.</p>
+                    <p>Mistura todas as matérias na proporção real do concurso ativo para manter tudo em dia.</p>
                 </button>
-                <button class="exam-option" onclick="startSession('model_tech')">
-                    <span class="exam-tag">50 Questões • Peso Alto</span>
-                    <h3>Modelo B: Foco Técnico + Leis</h3>
-                    <p>35 Infra/Redes + 10 Legislação + 5 Raciocínio Lógico. Ideal para subir a nota nos pesos maiores.</p>
+                <button class="exam-option" onclick="startSession('model_focus')">
+                    <span class="exam-tag">Meta Diária • Peso Maior</span>
+                    <h3>Modelo B: Foco na Matéria Principal</h3>
+                    <p>Prioriza a disciplina com maior peso e complementa com as demais matérias.</p>
                 </button>
                 <button class="exam-option" onclick="startSession('model_errors')">
                     <span class="exam-tag" id="errors-count-tag">Revisão Inteligente</span>
                     <h3>Modelo C: Caderno de Erros</h3>
-                    <p>Gera um simulado focado nas questões que você errou ou marcou para revisão.</p>
+                    <p>Gera um simulado focado apenas nas questões que você errou ou marcou para revisão.</p>
                 </button>
                 <button class="exam-option" onclick="startSession('model_quick')">
                     <span class="exam-tag">25 Questões • Rápido</span>
                     <h3>Modelo D: Bloco Express (Celular)</h3>
-                    <p>15 Infra/Redes + 5 Português + 3 Legislação + 2 Raciocínio Lógico para dias corridos.</p>
+                    <p>Sessão curta e equilibrada para estudar no celular em dias mais corridos.</p>
                 </button>
             </div>
         </div>
@@ -727,37 +728,12 @@
         <div class="card">
             <div class="card-header">
                 <div>
-                    <h2 class="card-title">Prova Oficial e Treinos por Assunto</h2>
-                    <p class="card-sub">Escolha o simulado completo ou filtre uma única disciplina</p>
+                    <h2 class="card-title">Prova Completa e Treinos por Matéria</h2>
+                    <p class="card-sub">Gerado automaticamente a partir do concurso selecionado</p>
                 </div>
+                <button class="btn btn-outline btn-sm" onclick="openConfigModal('ai')">🤖 Trocar Concurso</button>
             </div>
-            <div class="exam-grid">
-                <button class="exam-option" onclick="startSession('full')">
-                    <span class="exam-tag">80 Questões</span>
-                    <h3>Prova Completa UFPE/FADE</h3>
-                    <p>Estrutura oficial: 20 Português, 5 Raciocínio Lógico, 10 Legislação e 45 Infraestrutura/Redes.</p>
-                </button>
-                <button class="exam-option" onclick="startSession('subject', 'Conhecimentos Específicos')">
-                    <span class="exam-tag">45 Questões</span>
-                    <h3>Datacenter, Infra e Redes</h3>
-                    <p>Foco total nos conhecimentos específicos de TI da banca FADE/UFPE.</p>
-                </button>
-                <button class="exam-option" onclick="startSession('subject', 'Língua Portuguesa')">
-                    <span class="exam-tag">20 Questões</span>
-                    <h3>Língua Portuguesa</h3>
-                    <p>Crase, concordância, regência, pontuação, coesão e redação oficial.</p>
-                </button>
-                <button class="exam-option" onclick="startSession('subject', 'Legislação')">
-                    <span class="exam-tag">10 Questões</span>
-                    <h3>Legislação do Servidor</h3>
-                    <p>CF/88 Art. 37, Lei 8.112/90, Ética (Dec. 1.171), Lei 9.784/99, PCCTAE e LAI.</p>
-                </button>
-                <button class="exam-option" onclick="startSession('subject', 'Raciocínio Lógico')">
-                    <span class="exam-tag">5 Questões</span>
-                    <h3>Raciocínio Lógico</h3>
-                    <p>Negação, equivalência, Leis de De Morgan, conjuntos e combinatória.</p>
-                </button>
-            </div>
+            <div class="exam-grid" id="subject-train-grid"></div>
         </div>
     </section>
 
@@ -843,13 +819,7 @@
                 </div>
             </div>
             <input type="text" class="search-input" id="topic-search" placeholder="Buscar assunto (ex: OSPF, crase, 8.112, RAID, Zero Trust)..." oninput="renderTopicsTab()">
-            <div class="filter-row" id="topic-filters">
-                <button class="filter-pill active" onclick="setTopicFilter('Todos', this)">Todos</button>
-                <button class="filter-pill" onclick="setTopicFilter('Conhecimentos Específicos', this)">Infra & Redes</button>
-                <button class="filter-pill" onclick="setTopicFilter('Língua Portuguesa', this)">Português</button>
-                <button class="filter-pill" onclick="setTopicFilter('Legislação', this)">Legislação</button>
-                <button class="filter-pill" onclick="setTopicFilter('Raciocínio Lógico', this)">Raciocínio Lógico</button>
-            </div>
+            <div class="filter-row" id="topic-filters"></div>
             <div id="topics-list"></div>
         </div>
     </section>
@@ -897,15 +867,58 @@
     <button class="mobile-tab" data-tab="dicas" onclick="switchTab('dicas')"><span class="icon">💡</span>Dicas</button>
 </nav>
 
-<!-- Exam Date Modal -->
-<div class="modal-backdrop" id="date-modal">
-    <div class="modal-box">
-        <h3 class="card-title">Data da Prova (UFPE)</h3>
-        <p class="card-sub">A contagem aparece de forma sutil no topo do menu.</p>
-        <input type="date" id="exam-date-input">
-        <div style="display: flex; justify-content: flex-end; gap: 8px;">
-            <button class="btn btn-outline btn-sm" onclick="closeDateModal()">Cancelar</button>
-            <button class="btn btn-primary btn-sm" onclick="saveExamDate()">Salvar</button>
+<!-- Config & AI Exam Switcher Modal -->
+<div class="modal-backdrop" id="config-modal">
+    <div class="modal-box" style="max-width: 480px; max-height: 90vh; overflow-y: auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <h3 class="card-title">Configurar Concurso & IA</h3>
+            <button class="btn btn-outline btn-sm" onclick="closeConfigModal()" style="min-height:30px;padding:2px 10px;">✕</button>
+        </div>
+        <div class="filter-row" style="margin-bottom:14px;">
+            <button class="filter-pill active" id="cfg-tab-profile" onclick="switchConfigPane('profile')">Perfil & Meta</button>
+            <button class="filter-pill" id="cfg-tab-ai" onclick="switchConfigPane('ai')">Trocar Concurso (IA)</button>
+        </div>
+
+        <div id="cfg-pane-profile">
+            <label style="font-size:12.5px;font-weight:600;">Seu Nome</label>
+            <input type="text" class="search-input" id="cfg-user-name" placeholder="Ex: Maria Silva" style="margin-top:4px;">
+
+            <label style="font-size:12.5px;font-weight:600;">Concurso / Prova Atual</label>
+            <input type="text" class="search-input" id="cfg-exam-name" placeholder="Ex: INSS, UFPE, TJ, ENEM..." style="margin-top:4px;">
+
+            <label style="font-size:12.5px;font-weight:600;">Data da Prova (para contagem no topo)</label>
+            <input type="date" id="exam-date-input" style="margin-top:4px;">
+
+            <label style="font-size:12.5px;font-weight:600;">Meta Diária de Questões</label>
+            <input type="number" min="5" max="150" class="search-input" id="cfg-daily-goal" placeholder="50" style="margin-top:4px;">
+
+            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
+                <button class="btn btn-outline btn-sm" onclick="closeConfigModal()">Cancelar</button>
+                <button class="btn btn-primary btn-sm" onclick="saveProfileConfig()">Salvar</button>
+            </div>
+        </div>
+
+        <div id="cfg-pane-ai" class="hidden">
+            <p class="card-sub" style="margin-bottom:12px;">Quer estudar para outro concurso? Preencha abaixo, copie o prompt pronto para pedir a qualquer Agente IA (ChatGPT, Gemini, Claude) gerar o pacote e importe o arquivo <code>.json</code> aqui.</p>
+
+            <label style="font-size:12.5px;font-weight:600;">Para qual concurso/prova quer estudar?</label>
+            <input type="text" class="search-input" id="ai-exam-input" placeholder="Ex: Técnico do INSS / Banco do Brasil" style="margin-top:4px;">
+
+            <label style="font-size:12.5px;font-weight:600;">Matérias / Assuntos que precisa estudar</label>
+            <input type="text" class="search-input" id="ai-subjects-input" placeholder="Ex: Português, Direito Previdenciário, Informática" style="margin-top:4px;">
+
+            <label style="font-size:12.5px;font-weight:600;">Quanto tempo tem até a prova?</label>
+            <input type="text" class="search-input" id="ai-time-input" placeholder="Ex: 45 dias, fazendo 50 questões/dia" style="margin-top:4px;">
+
+            <button class="btn btn-primary btn-full btn-sm" onclick="copyAiPrompt()" id="copy-prompt-btn" style="margin-bottom:10px;">🤖 Gerar e Copiar Prompt para Agente IA</button>
+
+            <div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--border);">
+                <label class="btn btn-outline btn-sm" style="flex:1;margin:0;cursor:pointer;">
+                    📥 Importar Pacote (.json)
+                    <input type="file" accept=".json" style="display:none;" onchange="importExamPackage(event)">
+                </label>
+                <button class="btn btn-outline btn-sm" onclick="restoreDefaultPackage()" style="flex:1;">↺ Restaurar Modelo</button>
+            </div>
         </div>
     </div>
 </div>
@@ -1919,15 +1932,47 @@ const quizData = [
 const STORAGE_KEY = 'ufpe_study_matheus_v1';
 
 function loadState() {
+    let parsed = null;
     try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) return JSON.parse(raw);
+        if (raw) parsed = JSON.parse(raw);
     } catch (e) {}
     return {
-        examDate: '2026-12-20',
-        activeSession: null,
-        dailyHistory: {} // { 'YYYY-MM-DD': { questions: [ { qIndex, subject, correct, timeSec, answeredAt } ], totalTimeSec } }
+        userName: parsed?.userName || 'Estudante',
+        examName: parsed?.examName || 'Simulado Modelo (UFPE/FADE)',
+        examDate: parsed?.examDate || '2026-12-20',
+        dailyGoal: parsed?.dailyGoal || 50,
+        customQuestions: parsed?.customQuestions || null,
+        customTopics: parsed?.customTopics || null,
+        activeSession: parsed?.activeSession || null,
+        dailyHistory: parsed?.dailyHistory || {}
     };
+}
+
+function getActiveQuizData() {
+    return (Array.isArray(appState.customQuestions) && appState.customQuestions.length > 0)
+        ? appState.customQuestions
+        : quizData;
+}
+
+function getActiveTopics() {
+    return (Array.isArray(appState.customTopics) && appState.customTopics.length > 0)
+        ? appState.customTopics
+        : studyTopics;
+}
+
+function getActiveSubjects() {
+    const map = {};
+    getActiveQuizData().forEach(q => {
+        const s = q.subject || 'Conhecimentos Específicos';
+        map[s] = (map[s] || 0) + 1;
+    });
+    return map;
+}
+
+function updateHeaderBrand() {
+    document.getElementById('brand-title').innerText = `ProjectConcurso • ${appState.examName || 'Simulado Modelo'}`;
+    document.getElementById('brand-user').innerHTML = `Olá, ${escHtml(appState.userName || 'Estudante')} • <small style="opacity:0.75;">criado por Matheus Goes</small>`;
 }
 
 let appState = loadState();
@@ -1967,21 +2012,95 @@ function updateCountdown() {
     else pill.innerText = `Data: ${appState.examDate.split('-').reverse().join('/')}`;
 }
 
-function openDateModal() {
+function openConfigModal(pane) {
+    document.getElementById('cfg-user-name').value = appState.userName || 'Estudante';
+    document.getElementById('cfg-exam-name').value = appState.examName || '';
     document.getElementById('exam-date-input').value = appState.examDate || '';
-    document.getElementById('date-modal').classList.add('open');
+    document.getElementById('cfg-daily-goal').value = appState.dailyGoal || 50;
+    switchConfigPane(pane || 'profile');
+    document.getElementById('config-modal').classList.add('open');
 }
-function closeDateModal() {
-    document.getElementById('date-modal').classList.remove('open');
+function closeConfigModal() {
+    document.getElementById('config-modal').classList.remove('open');
 }
-function saveExamDate() {
-    const val = document.getElementById('exam-date-input').value;
-    if (val) {
-        appState.examDate = val;
-        saveState();
-        updateCountdown();
-    }
-    closeDateModal();
+function switchConfigPane(pane) {
+    const isProf = pane === 'profile';
+    document.getElementById('cfg-pane-profile').classList.toggle('hidden', !isProf);
+    document.getElementById('cfg-pane-ai').classList.toggle('hidden', isProf);
+    document.getElementById('cfg-tab-profile').classList.toggle('active', isProf);
+    document.getElementById('cfg-tab-ai').classList.toggle('active', !isProf);
+}
+function saveProfileConfig() {
+    const name = document.getElementById('cfg-user-name').value.trim();
+    const exam = document.getElementById('cfg-exam-name').value.trim();
+    const dateVal = document.getElementById('exam-date-input').value;
+    const goalVal = parseInt(document.getElementById('cfg-daily-goal').value, 10);
+
+    if (name) appState.userName = name;
+    if (exam) appState.examName = exam;
+    if (dateVal) appState.examDate = dateVal;
+    if (goalVal >= 5 && goalVal <= 150) appState.dailyGoal = goalVal;
+
+    saveState();
+    updateHeaderBrand();
+    updateCountdown();
+    renderProvasTab();
+    closeConfigModal();
+}
+
+function copyAiPrompt() {
+    const exam = document.getElementById('ai-exam-input').value.trim() || 'meu concurso alvo';
+    const subjs = document.getElementById('ai-subjects-input').value.trim() || 'as principais matérias do edital';
+    const time = document.getElementById('ai-time-input').value.trim() || '60 dias até a prova';
+
+    const prompt = `Quero estudar para a prova/concurso: "${exam}".\nMatérias que preciso estudar: ${subjs}.\nTempo disponível até a prova: ${time}.\n\n1) Primeiro, monte um plano de estudo semanal enxuto e prático para esse prazo.\n2) Depois, gere um arquivo JSON válido para importar no meu aplicativo ProjectConcurso, contendo questões inéditas no estilo da banca (com explicação do gabarito e por que as outras estão erradas) e resumos didáticos de cada assunto, exatamente neste formato:\n\n{\n  "examName": "${exam}",\n  "questions": [\n    {\n      "subject": "Nome da Matéria",\n      "q": "Enunciado completo da questão",\n      "options": ["A) ...", "B) ...", "C) ...", "D) ...", "E) ..."],\n      "answer": 0,\n      "summary": "Explicação clara do gabarito.",\n      "wrongNotes": { "1": "Por que B está errada", "2": "Por que C está errada" }\n    }\n  ],\n  "topics": [\n    {\n      "subject": "Nome da Matéria",\n      "title": "Título do Assunto",\n      "body": "Explicação simples para iniciantes.",\n      "tip": "Dica rápida de prova."\n    }\n  ]\n}`;
+
+    navigator.clipboard.writeText(prompt).then(() => {
+        const btn = document.getElementById('copy-prompt-btn');
+        btn.innerText = '✓ Prompt copiado! Cole na sua IA';
+        setTimeout(() => { btn.innerText = '🤖 Gerar e Copiar Prompt para Agente IA'; }, 3000);
+    }).catch(() => {
+        alert(prompt);
+    });
+}
+
+function importExamPackage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const pkg = JSON.parse(e.target.result);
+            if (!pkg || !Array.isArray(pkg.questions) || pkg.questions.length === 0) {
+                alert('Arquivo inválido. O JSON precisa conter um array "questions".');
+                return;
+            }
+            appState.customQuestions = pkg.questions;
+            appState.customTopics = Array.isArray(pkg.topics) ? pkg.topics : [];
+            if (pkg.examName) appState.examName = pkg.examName;
+            appState.activeSession = null;
+            saveState();
+            updateHeaderBrand();
+            renderProvasTab();
+            closeConfigModal();
+            alert(`Concurso "${appState.examName}" carregado com ${pkg.questions.length} questões!`);
+        } catch (err) {
+            alert('Erro ao ler o arquivo JSON do concurso.');
+        }
+    };
+    reader.readAsText(file);
+}
+
+function restoreDefaultPackage() {
+    appState.customQuestions = null;
+    appState.customTopics = null;
+    appState.examName = 'Simulado Modelo (UFPE/FADE)';
+    appState.activeSession = null;
+    saveState();
+    updateHeaderBrand();
+    renderProvasTab();
+    closeConfigModal();
+    alert('Pacote modelo padrão restaurado!');
 }
 
 function switchTab(tabName) {
@@ -2036,12 +2155,16 @@ function getStreakDays() {
 }
 
 function renderProvasTab() {
+    const goal = appState.dailyGoal || 50;
     const today = todayKey();
     const todayData = appState.dailyHistory[today];
     const doneToday = todayData ? todayData.questions.length : 0;
-    const pct = Math.min(100, Math.round((doneToday / 50) * 100));
+    const pct = Math.min(100, Math.round((doneToday / goal) * 100));
 
-    document.getElementById('daily-goal-sub').innerText = `${doneToday} de 50 questões concluídas hoje`;
+    document.getElementById('daily-goal-title').innerText = `Meta Diária — ${goal} Questões`;
+    document.getElementById('daily-goal-sub').innerText = `${doneToday} de ${goal} questões concluídas hoje`;
+    document.getElementById('start-daily-btn').innerText = `Iniciar Meta Diária (${goal} questões)`;
+    document.getElementById('model-a-tag').innerText = `${goal} Questões • Proporcional`;
     document.getElementById('daily-pct-tag').innerText = `${pct}%`;
     document.getElementById('daily-progress-fill').style.width = `${pct}%`;
     document.getElementById('streak-tag').innerText = `🔥 ${getStreakDays()}d`;
@@ -2064,62 +2187,72 @@ function renderProvasTab() {
         resumeBox.classList.add('hidden');
         startWrap.classList.remove('hidden');
     }
+
+    // Dynamic Subject & Full Exam Grid
+    const activeQ = getActiveQuizData();
+    const subjects = getActiveSubjects();
+    let gridHtml = `
+        <button class="exam-option" onclick="startSession('full')">
+            <span class="exam-tag">${activeQ.length} Questões</span>
+            <h3>Prova Completa</h3>
+            <p>${escHtml(appState.examName || 'Simulado Completo')} — todas as ${activeQ.length} questões do pacote ativo.</p>
+        </button>
+    `;
+    Object.entries(subjects).forEach(([subj, count]) => {
+        gridHtml += `
+            <button class="exam-option" onclick="startSession('subject', '${escHtml(subj)}')">
+                <span class="exam-tag">${count} Questões</span>
+                <h3>${escHtml(subj)}</h3>
+                <p>Treino focado exclusivamente nas questões de ${escHtml(subj)}.</p>
+            </button>
+        `;
+    });
+    document.getElementById('subject-train-grid').innerHTML = gridHtml;
 }
 
-function pickBySubjectQuota(quotas) {
+function pickProportional(totalTarget, focusMain = false) {
+    const activeQ = getActiveQuizData();
+    const subjects = getActiveSubjects();
+    const totalAvail = activeQ.length;
+    const target = Math.min(totalTarget, totalAvail);
     const chosen = [];
-    Object.entries(quotas).forEach(([subj, count]) => {
-        const pool = quizData
+    const entries = Object.entries(subjects).sort((a, b) => b[1] - a[1]);
+
+    entries.forEach(([subj, cnt], idx) => {
+        const weight = focusMain && idx === 0 ? Math.min(0.7, (cnt / totalAvail) + 0.15) : (cnt / totalAvail);
+        const quota = Math.max(1, Math.round(target * weight));
+        const pool = activeQ
             .map((q, i) => ({ q, i }))
             .filter(x => (x.q.subject || 'Conhecimentos Específicos') === subj)
             .map(x => x.i)
             .sort(() => Math.random() - 0.5);
-        chosen.push(...pool.slice(0, count));
+        chosen.push(...pool.slice(0, quota));
     });
-    return chosen;
+    return chosen.slice(0, target);
 }
 
 function buildQuestionIndices(mode, subjectName) {
-    if (mode === 'full') return quizData.map((_, i) => i);
+    const activeQ = getActiveQuizData();
+    const goal = appState.dailyGoal || 50;
+
+    if (mode === 'full') return activeQ.map((_, i) => i);
     if (mode === 'subject') {
-        return quizData.map((q, i) => ({ q, i })).filter(x => (x.q.subject || 'Conhecimentos Específicos') === subjectName).map(x => x.i);
+        return activeQ.map((q, i) => ({ q, i })).filter(x => (x.q.subject || 'Conhecimentos Específicos') === subjectName).map(x => x.i);
     }
-    if (mode === 'model_balanced') {
-        return pickBySubjectQuota({
-            'Língua Portuguesa': 12,
-            'Raciocínio Lógico': 4,
-            'Legislação': 6,
-            'Conhecimentos Específicos': 28
-        });
-    }
-    if (mode === 'model_tech') {
-        return pickBySubjectQuota({
-            'Conhecimentos Específicos': 35,
-            'Legislação': 10,
-            'Raciocínio Lógico': 5
-        });
-    }
-    if (mode === 'model_quick') {
-        return pickBySubjectQuota({
-            'Língua Portuguesa': 5,
-            'Raciocínio Lógico': 2,
-            'Legislação': 3,
-            'Conhecimentos Específicos': 15
-        });
-    }
+    if (mode === 'model_balanced') return pickProportional(goal, false);
+    if (mode === 'model_focus') return pickProportional(goal, true);
+    if (mode === 'model_quick') return pickProportional(25, false);
     if (mode === 'model_errors') {
-        const errs = getErrorQuestionIndices();
+        const errs = getErrorQuestionIndices().filter(i => i < activeQ.length);
         if (errs.length === 0) return [];
-        return errs.sort(() => Math.random() - 0.5).slice(0, 50);
+        return errs.sort(() => Math.random() - 0.5).slice(0, goal);
     }
-    // Daily 50: balanced across subjects prioritizing questions not done today
     const today = todayKey();
     const doneSet = new Set((appState.dailyHistory[today]?.questions || []).map(x => x.qIndex));
-    const allIndices = quizData.map((_, i) => i);
+    const allIndices = activeQ.map((_, i) => i);
     const notDoneToday = allIndices.filter(i => !doneSet.has(i));
-    const pool = notDoneToday.length >= 50 ? notDoneToday : allIndices;
-    const shuffled = [...pool].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, 50);
+    const pool = notDoneToday.length >= goal ? notDoneToday : allIndices;
+    return [...pool].sort(() => Math.random() - 0.5).slice(0, Math.min(goal, pool.length));
 }
 
 function startSession(mode, subjectName) {
@@ -2128,13 +2261,14 @@ function startSession(mode, subjectName) {
         alert('Você ainda não tem erros registrados no histórico! Continue fazendo seus simulados.');
         return;
     }
+    const goal = appState.dailyGoal || 50;
     const titleMap = {
-        daily: 'Meta Diária (50 questões)',
-        full: 'Prova Completa UFPE/FADE (80 questões)',
-        model_balanced: 'Modelo A: Rotina Equilibrada (50q)',
-        model_tech: 'Modelo B: Foco Técnico + Leis (50q)',
+        daily: `Meta Diária (${indices.length} questões)`,
+        full: `Prova Completa (${indices.length} questões)`,
+        model_balanced: `Modelo A: Rotina Equilibrada (${indices.length}q)`,
+        model_focus: `Modelo B: Foco Principal (${indices.length}q)`,
         model_errors: `Modelo C: Caderno de Erros (${indices.length}q)`,
-        model_quick: 'Modelo D: Bloco Express (25q)'
+        model_quick: `Modelo D: Bloco Express (${indices.length}q)`
     };
     const title = titleMap[mode] || `Treino: ${subjectName}`;
 
@@ -2199,9 +2333,11 @@ function toggleMobileGrid() {
 function renderActiveQuestion() {
     const s = appState.activeSession;
     if (!s) return;
+    const activeQ = getActiveQuizData();
     const pos = s.currentIndex;
     const qIdx = s.indices[pos];
-    const item = quizData[qIdx];
+    const item = activeQ[qIdx];
+    if (!item) return;
     const subj = item.subject || 'Conhecimentos Específicos';
     const userAns = s.answers[pos];
     const isAnswered = userAns !== null;
@@ -2262,9 +2398,10 @@ function renderActiveQuestion() {
 function answerQuestion(optIndex) {
     const s = appState.activeSession;
     if (!s || s.answers[s.currentIndex] !== null) return;
+    const activeQ = getActiveQuizData();
     const pos = s.currentIndex;
     const qIdx = s.indices[pos];
-    const item = quizData[qIdx];
+    const item = activeQ[qIdx];
 
     s.answers[pos] = optIndex;
     const isCorrect = optIndex === item.answer;
@@ -2331,6 +2468,7 @@ function jumpToQ(pos) {
 function renderAnswerGrid() {
     const s = appState.activeSession;
     if (!s) return;
+    const activeQ = getActiveQuizData();
     const grid = document.getElementById('answer-grid');
     let answered = 0;
     let html = '';
@@ -2340,7 +2478,7 @@ function renderAnswerGrid() {
         if (pos === s.currentIndex) cls += ' active';
         if (ans !== null) {
             answered++;
-            cls += ans === quizData[qIdx].answer ? ' ok' : ' err';
+            cls += (activeQ[qIdx] && ans === activeQ[qIdx].answer) ? ' ok' : ' err';
         }
         if (s.flagged[pos]) cls += ' flagged';
         html += `<button class="${cls}" onclick="jumpToQ(${pos})">${pos + 1}</button>`;
@@ -2404,7 +2542,7 @@ function renderHistoryTab() {
                 </div>
                 <div id="day-det-${di}" class="q-detail-list hidden">
                     ${d.questions.map((q, idx) => {
-                        const qObj = quizData[q.qIndex];
+                        const qObj = getActiveQuizData()[q.qIndex];
                         const shortQ = qObj ? qObj.q.replace(/^\d+\.\s*/, '').slice(0, 75) + '...' : `Questão #${q.qIndex + 1}`;
                         return `<div class="q-detail-row">
                             <span><strong>${q.correct ? '✓' : '✕'}</strong> [${escHtml(q.subject)}] ${escHtml(shortQ)}</span>
@@ -2683,14 +2821,21 @@ function openTopicFromQuestion(subj) {
 function renderTopicsTab() {
     const query = (document.getElementById('topic-search')?.value || '').toLowerCase().trim();
     const list = document.getElementById('topics-list');
-    const filtered = studyTopics.filter(t => {
+    const activeTopics = getActiveTopics();
+    const activeSubjects = ['Todos', ...new Set(activeTopics.map(t => t.subject))];
+
+    document.getElementById('topic-filters').innerHTML = activeSubjects.map(s => `
+        <button class="filter-pill ${currentTopicFilter === s ? 'active' : ''}" onclick="setTopicFilter('${escHtml(s)}', this)">${escHtml(s)}</button>
+    `).join('');
+
+    const filtered = activeTopics.filter(t => {
         const matchSubj = currentTopicFilter === 'Todos' || t.subject === currentTopicFilter;
         const matchText = !query || t.title.toLowerCase().includes(query) || t.body.toLowerCase().includes(query) || t.tip.toLowerCase().includes(query);
         return matchSubj && matchText;
     });
 
     if (filtered.length === 0) {
-        list.innerHTML = `<p style="color:var(--text-muted);font-size:13.5px;">Nenhum assunto encontrado para "${escHtml(query)}".</p>`;
+        list.innerHTML = `<p style="color:var(--text-muted);font-size:13.5px;">Nenhum assunto encontrado${query ? ` para "${escHtml(query)}"` : ''}.</p>`;
         return;
     }
 
@@ -2722,6 +2867,7 @@ function toggleDarkMode() {
 
 window.onload = () => {
     applyTheme();
+    updateHeaderBrand();
     updateCountdown();
     renderProvasTab();
 };
