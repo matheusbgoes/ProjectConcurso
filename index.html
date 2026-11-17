@@ -718,6 +718,35 @@
         body.dark .options-list.answered li.correct { color: #dcfce7; }
         body.dark .options-list.answered li.wrong { color: #fecaca; }
         body.dark .btn-primary { color: #0f172a; }
+        .dropzone {
+            border: 2px dashed var(--border-strong);
+            border-radius: 10px;
+            padding: 24px 16px;
+            text-align: center;
+            background: var(--bg);
+            cursor: pointer;
+            transition: border-color 0.15s, background-color 0.15s;
+        }
+        .dropzone:hover, .dropzone.dragover {
+            border-color: var(--accent);
+            background: var(--accent-soft);
+        }
+        .setup-grid {
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 16px;
+            align-items: start;
+        }
+        @media (max-width: 760px) { .setup-grid { grid-template-columns: 1fr; } }
+        .file-status {
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            background: var(--green-bg);
+            border: 1px solid var(--green-border);
+            color: var(--green);
+        }
     </style>
 </head>
 <body>
@@ -732,6 +761,7 @@
             <button class="countdown-pill" id="countdown-pill" onclick="openConfigModal('profile')" title="Clique para ajustar a data da prova">
                 Definir data da prova
             </button>
+            <button class="btn btn-outline btn-sm" onclick="openSetupScreen()" title="Montar novo concurso com arquivos" style="min-height:32px;padding:4px 10px;">Novo Concurso</button>
             <button class="btn btn-outline btn-sm" onclick="openConfigModal('profile')" title="Configurar perfil, concurso ou IA" style="min-height:32px;padding:4px 10px;">Configurar</button>
             <button class="btn btn-outline btn-sm" id="theme-btn" onclick="toggleDarkMode()" title="Alternar tema claro/escuro" style="min-height:32px;padding:4px 10px;">Escuro</button>
         </div>
@@ -747,6 +777,65 @@
 </nav>
 
 <main class="container">
+    <!-- TAB: SETUP INICIAL / MONTAGEM DA PROVA -->
+    <section id="tab-setup" class="hidden">
+        <div class="card" style="border-top: 4px solid var(--accent);">
+            <h2 style="font-size: 20px; font-weight: 700; margin: 0 0 6px;">Prepare seu ambiente de estudos</h2>
+            <p class="card-sub" style="font-size: 14px; margin: 0;">Envie os arquivos da sua prova, edital ou questões para montar seu simulado personalizado, ou comece com o modelo pronto.</p>
+        </div>
+
+        <div class="setup-grid">
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h3 class="card-title">1. Enviar Arquivos da Prova ou Edital</h3>
+                        <p class="card-sub">Aceita pacotes <code>.json</code>, listas de questões <code>.txt/.md/.csv</code> ou editais</p>
+                    </div>
+                </div>
+                <div class="dropzone" id="setup-dropzone" onclick="document.getElementById('setup-file-input').click()">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent);margin-bottom:6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <div style="font-size:14px;font-weight:600;color:var(--text);">Clique para selecionar ou arraste seus arquivos aqui</div>
+                    <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Suporta .json (pacote completo), .txt, .md, .csv e leitura de .pdf</div>
+                    <input type="file" id="setup-file-input" multiple accept=".json,.txt,.md,.csv,.pdf" style="display:none;" onchange="handleSetupFiles(this.files)">
+                </div>
+                <div id="setup-file-feedback" class="hidden"></div>
+                <div id="setup-ai-helper" class="hidden" style="margin-top:12px;padding:12px;border-radius:8px;background:var(--accent-soft);border:1px solid #dbeafe;">
+                    <div style="font-size:13px;font-weight:600;color:var(--accent);margin-bottom:6px;">Conteúdo lido! Gere seu simulado com IA:</div>
+                    <p style="font-size:12.5px;color:var(--text-muted);margin:0 0 10px;">O arquivo não está no formato de questões prontas. Copie o prompt abaixo (já com os dados do seu arquivo) para pedir à sua IA gerar o pacote <code>.json</code> e importe aqui.</p>
+                    <button class="btn btn-primary btn-sm" onclick="copyExtractedAiPrompt()">Copiar Prompt com Conteúdo do Arquivo</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h3 class="card-title">2. Seus Dados e Meta</h3>
+                        <p class="card-sub">Sem login ou senha — salvo direto no seu aparelho</p>
+                    </div>
+                </div>
+                <label style="font-size:12.5px;font-weight:600;">Seu Nome</label>
+                <input type="text" class="search-input" id="setup-user-name" placeholder="Ex: Ana Paula" style="margin-top:4px;">
+
+                <label style="font-size:12.5px;font-weight:600;">Qual concurso ou prova vai fazer?</label>
+                <input type="text" class="search-input" id="setup-exam-name" placeholder="Ex: INSS, TJ-PE, Banco do Brasil, OAB..." style="margin-top:4px;">
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <div>
+                        <label style="font-size:12.5px;font-weight:600;">Data da Prova</label>
+                        <input type="date" class="search-input" id="setup-exam-date" style="margin-top:4px;">
+                    </div>
+                    <div>
+                        <label style="font-size:12.5px;font-weight:600;">Meta Diária (questões)</label>
+                        <input type="number" min="5" max="150" class="search-input" id="setup-daily-goal" value="50" style="margin-top:4px;">
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-full" onclick="finishSetupAndStart()" style="margin-top:6px;">Começar a Estudar</button>
+                <button class="btn btn-outline btn-full btn-sm" onclick="useDefaultModelAndStart()" style="margin-top:8px;">Explorar com Simulado Modelo (80 questões)</button>
+            </div>
+        </div>
+    </section>
+
     <!-- TAB: PROVAS (MENU PRINCIPAL) -->
     <section id="tab-provas">
         <div class="guide-banner" id="onboarding-banner">
@@ -2059,9 +2148,10 @@ const PROFILES_KEY = 'projectconcurso_profiles_v1';
 function createEmptyProfile(name) {
     return {
         userName: name || 'Estudante',
-        examName: 'Simulado Modelo (UFPE/FADE)',
+        examName: 'Meu Concurso',
         examDate: '2026-12-20',
         dailyGoal: 50,
+        hasConfigured: false,
         customQuestions: null,
         customTopics: null,
         activeSession: null,
@@ -2292,8 +2382,8 @@ function copyAiPrompt() {
 
     navigator.clipboard.writeText(prompt).then(() => {
         const btn = document.getElementById('copy-prompt-btn');
-        btn.innerText = '✓ Prompt copiado! Cole na sua IA';
-        setTimeout(() => { btn.innerText = '🤖 Gerar e Copiar Prompt para Agente IA'; }, 3000);
+        btn.innerText = 'Prompt copiado! Cole na sua IA';
+        setTimeout(() => { btn.innerText = 'Gerar e Copiar Prompt para Agente IA'; }, 3000);
     }).catch(() => {
         alert(prompt);
     });
@@ -2340,16 +2430,16 @@ function restoreDefaultPackage() {
 
 function switchTab(tabName) {
     if (tabName !== 'session') stopTimers();
-    ['provas', 'assuntos', 'historico', 'semanal', 'dicas', 'session'].forEach(t => {
+    ['setup', 'provas', 'assuntos', 'historico', 'semanal', 'dicas', 'session'].forEach(t => {
         document.getElementById(`tab-${t}`).classList.add('hidden');
     });
     document.getElementById(`tab-${tabName}`).classList.remove('hidden');
 
-    const inSession = tabName === 'session';
-    document.getElementById('desktop-nav').classList.toggle('hidden', inSession);
-    document.getElementById('mobile-nav').classList.toggle('hidden', inSession);
+    const hideNav = tabName === 'session' || tabName === 'setup';
+    document.getElementById('desktop-nav').classList.toggle('hidden', hideNav);
+    document.getElementById('mobile-nav').classList.toggle('hidden', hideNav);
 
-    if (!inSession) {
+    if (!hideNav) {
         document.querySelectorAll('.nav-tab, .mobile-tab').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.tab === tabName);
         });
@@ -2361,6 +2451,172 @@ function switchTab(tabName) {
     if (tabName === 'semanal') renderWeeklyTab();
     if (tabName === 'dicas') renderTipsTab();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+let pendingExtractedText = '';
+let pendingParsedQuestions = null;
+let pendingParsedTopics = null;
+let pendingExamTitle = '';
+
+function openSetupScreen() {
+    document.getElementById('setup-user-name').value = appState.userName === 'Estudante' ? '' : (appState.userName || '');
+    document.getElementById('setup-exam-name').value = appState.examName === 'Meu Concurso' ? '' : (appState.examName || '');
+    document.getElementById('setup-exam-date').value = appState.examDate || '2026-12-20';
+    document.getElementById('setup-daily-goal').value = appState.dailyGoal || 50;
+    document.getElementById('setup-file-feedback').classList.add('hidden');
+    document.getElementById('setup-ai-helper').classList.add('hidden');
+    pendingExtractedText = '';
+    pendingParsedQuestions = null;
+    pendingParsedTopics = null;
+    pendingExamTitle = '';
+    switchTab('setup');
+}
+
+function parseQuestionsFromText(text, fallbackSubject) {
+    const blocks = text.split(/\n(?=\s*\d+[\.\)]\s+)/);
+    const parsed = [];
+    blocks.forEach(block => {
+        const lines = block.trim().split('\n').map(l => l.trim()).filter(Boolean);
+        if (lines.length < 4) return;
+        const optStart = lines.findIndex(l => /^[A-Ea-e][\)\.\-]\s+/.test(l));
+        if (optStart <= 0) return;
+        const qText = lines.slice(0, optStart).join(' ').replace(/^\d+[\.\)]\s*/, '');
+        const opts = [];
+        let ans = 0;
+        let summary = 'Questão importada a partir do seu arquivo.';
+        for (let i = optStart; i < lines.length; i++) {
+            const l = lines[i];
+            const om = l.match(/^([A-Ea-e])[\)\.\-]\s+([\s\S]+)$/);
+            if (om && opts.length < 5) {
+                opts.push(`${om[1].toUpperCase()}) ${om[2]}`);
+            } else if (/^(gabarito|resposta|resp)[:\s]+([A-Ea-e])/i.test(l)) {
+                const gm = l.match(/([A-Ea-e])\s*$/i);
+                if (gm) ans = gm[1].toUpperCase().charCodeAt(0) - 65;
+            } else if (/^(resumo|explica[çc][ãa]o)[:\s]+/i.test(l)) {
+                summary = l.replace(/^(resumo|explica[çc][ãa]o)[:\s]+/i, '');
+            }
+        }
+        if (opts.length >= 2) {
+            parsed.push({
+                subject: fallbackSubject || 'Geral',
+                q: qText,
+                options: opts,
+                answer: Math.min(Math.max(0, ans), opts.length - 1),
+                summary
+            });
+        }
+    });
+    return parsed;
+}
+
+async function handleSetupFiles(fileList) {
+    const files = Array.from(fileList || []);
+    if (files.length === 0) return;
+    const fb = document.getElementById('setup-file-feedback');
+    const aiBox = document.getElementById('setup-ai-helper');
+    fb.className = 'file-status';
+    fb.classList.remove('hidden');
+    aiBox.classList.add('hidden');
+
+    let loadedQ = [];
+    let loadedT = [];
+    let rawTexts = [];
+    let detectedName = '';
+
+    for (const file of files) {
+        const ext = file.name.split('.').pop().toLowerCase();
+        const baseName = file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ');
+        if (!detectedName) detectedName = baseName;
+
+        if (ext === 'json') {
+            try {
+                const txt = await file.text();
+                const pkg = JSON.parse(txt);
+                if (pkg && Array.isArray(pkg.questions)) {
+                    loadedQ.push(...pkg.questions);
+                    if (Array.isArray(pkg.topics)) loadedT.push(...pkg.topics);
+                    if (pkg.examName) detectedName = pkg.examName;
+                }
+            } catch (e) {}
+        } else if (ext === 'txt' || ext === 'md' || ext === 'csv') {
+            const txt = await file.text();
+            const qs = parseQuestionsFromText(txt, baseName);
+            if (qs.length > 0) loadedQ.push(...qs);
+            else rawTexts.push(`--- Arquivo: ${file.name} ---\n${txt.slice(0, 4000)}`);
+        } else if (ext === 'pdf') {
+            const buf = await file.arrayBuffer();
+            const dec = new TextDecoder('latin1').decode(buf);
+            const matches = dec.match(/\(([^()]{4,120})\)/g) || [];
+            const cleanTxt = matches.map(m => m.slice(1, -1)).filter(s => /[a-zA-ZÀ-ÿ]{3,}/.test(s)).join(' ').slice(0, 3500);
+            rawTexts.push(`--- PDF: ${file.name} ---\n${cleanTxt || '(PDF binário/escaneado — use o nome do concurso e as matérias no prompt IA)'}`);
+        }
+    }
+
+    if (detectedName && !document.getElementById('setup-exam-name').value.trim()) {
+        document.getElementById('setup-exam-name').value = detectedName;
+        pendingExamTitle = detectedName;
+    }
+
+    if (loadedQ.length > 0) {
+        pendingParsedQuestions = loadedQ;
+        pendingParsedTopics = loadedT;
+        fb.innerHTML = `<strong>Pronto!</strong> ${loadedQ.length} questões carregadas de ${files.length} arquivo(s). Clique em <strong>Começar a Estudar</strong>.`;
+    } else {
+        pendingExtractedText = rawTexts.join('\n\n');
+        fb.innerHTML = `<strong>Arquivo(s) lido(s):</strong> ${files.map(f => escHtml(f.name)).join(', ')}.`;
+        aiBox.classList.remove('hidden');
+    }
+}
+
+function copyExtractedAiPrompt() {
+    const exam = document.getElementById('setup-exam-name').value.trim() || pendingExamTitle || 'meu concurso';
+    const goal = document.getElementById('setup-daily-goal').value || 50;
+    const excerpt = (pendingExtractedText || '').slice(0, 3000);
+    const prompt = `Com base no conteúdo/edital abaixo do concurso "${exam}" (meta de ${goal} questões/dia), gere um arquivo JSON válido para importar no meu aplicativo ProjectConcurso com questões inéditas no estilo da banca (explicando o gabarito e os erros) e resumos dos assuntos:\n\nCONTEÚDO DO ARQUIVO:\n${excerpt}\n\nFORMATO JSON ESPERADO:\n{\n  "examName": "${exam}",\n  "questions": [\n    { "subject": "Matéria", "q": "Enunciado", "options": ["A) ...", "B) ...", "C) ...", "D) ...", "E) ..."], "answer": 0, "summary": "Gabarito comentado" }\n  ],\n  "topics": [\n    { "subject": "Matéria", "title": "Assunto", "body": "Explicação simples", "tip": "Dica de prova" }\n  ]\n}`;
+    navigator.clipboard.writeText(prompt).then(() => {
+        showToast('Prompt com o conteúdo do arquivo copiado!');
+    }).catch(() => alert(prompt));
+}
+
+function finishSetupAndStart() {
+    const name = document.getElementById('setup-user-name').value.trim();
+    const exam = document.getElementById('setup-exam-name').value.trim();
+    const dateVal = document.getElementById('setup-exam-date').value;
+    const goalVal = parseInt(document.getElementById('setup-daily-goal').value, 10);
+
+    if (name) appState.userName = name;
+    if (exam) appState.examName = exam;
+    else if (!appState.customQuestions && !pendingParsedQuestions) appState.examName = 'Simulado Modelo (UFPE/FADE)';
+    if (dateVal) appState.examDate = dateVal;
+    if (goalVal >= 5 && goalVal <= 150) appState.dailyGoal = goalVal;
+
+    if (pendingParsedQuestions && pendingParsedQuestions.length > 0) {
+        appState.customQuestions = pendingParsedQuestions;
+        appState.customTopics = pendingParsedTopics || [];
+        appState.activeSession = null;
+    }
+
+    appState.hasConfigured = true;
+    saveState();
+    updateHeaderBrand();
+    updateCountdown();
+    switchTab('provas');
+    showToast('Ambiente de estudos pronto!');
+}
+
+function useDefaultModelAndStart() {
+    const name = document.getElementById('setup-user-name').value.trim();
+    if (name) appState.userName = name;
+    appState.customQuestions = null;
+    appState.customTopics = null;
+    appState.examName = 'Simulado Modelo (UFPE/FADE)';
+    appState.hasConfigured = true;
+    appState.activeSession = null;
+    saveState();
+    updateHeaderBrand();
+    updateCountdown();
+    switchTab('provas');
+    showToast('Simulado modelo carregado!');
 }
 
 function getErrorQuestionIndices() {
@@ -3129,7 +3385,22 @@ window.onload = () => {
     applyTheme();
     updateHeaderBrand();
     updateCountdown();
-    renderProvasTab();
+    const dz = document.getElementById('setup-dropzone');
+    if (dz) {
+        dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('dragover'); });
+        dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+        dz.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dz.classList.remove('dragover');
+            handleSetupFiles(e.dataTransfer.files);
+        });
+    }
+    const hasHistory = Object.keys(appState.dailyHistory || {}).length > 0;
+    if (!appState.hasConfigured && !hasHistory) {
+        openSetupScreen();
+    } else {
+        switchTab('provas');
+    }
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
         navigator.serviceWorker.register('./sw.js').catch(() => {});
     }
