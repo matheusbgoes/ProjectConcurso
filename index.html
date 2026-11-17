@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#ffffff">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none';">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta property="og:type" content="website">
     <meta property="og:title" content="ProjectConcurso — Plataforma Gratuita de Estudos para Concursos">
     <meta property="og:description" content="Monte simulados com seus arquivos ou IA, acompanhe meta diária, histórico por assunto e desempenho semanal no PC ou celular.">
@@ -1097,7 +1099,7 @@
 
     <footer style="margin-top: 28px; padding: 16px 4px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 12.5px; color: var(--text-muted);">
         <span><strong>ProjectConcurso</strong> • Gratuito, sem login e offline (PWA) • Criado por <strong>Matheus Goes</strong></span>
-        <a href="https://github.com/matheusbgoes/ProjectConcurso" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--text); text-decoration: none; font-weight: 600;">
+        <a href="https://github.com/matheusbgoes/ProjectConcurso" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--text); text-decoration: none; font-weight: 600;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.25.45-2.28 1.19-3.08-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.18 1.18a11.07 11.07 0 0 1 5.78 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.58.23 2.75.11 3.04.74.8 1.19 1.83 1.19 3.08 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14 0 1.55-.01 2.8-.01 3.18 0 .31.21.67.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
             GitHub do Projeto
         </a>
@@ -2468,28 +2470,76 @@ function copyAiPrompt() {
     });
 }
 
+function safeJsonParse(raw) {
+    return JSON.parse(raw, (key, val) => {
+        if (key === '__proto__' || key === 'constructor' || key === 'prototype') return undefined;
+        return val;
+    });
+}
+
+function sanitizeExamPackage(pkg) {
+    if (!pkg || typeof pkg !== 'object' || !Array.isArray(pkg.questions)) return null;
+    const cleanQ = [];
+    for (const item of pkg.questions.slice(0, 500)) {
+        if (!item || typeof item.q !== 'string' || !Array.isArray(item.options) || item.options.length < 2) continue;
+        const opts = item.options.slice(0, 5).map(o => String(o).slice(0, 500));
+        const ans = Number.isInteger(item.answer) && item.answer >= 0 && item.answer < opts.length ? item.answer : 0;
+        const wrongNotes = {};
+        if (item.wrongNotes && typeof item.wrongNotes === 'object') {
+            Object.entries(item.wrongNotes).forEach(([k, v]) => {
+                if (/^[0-4]$/.test(k) && typeof v === 'string') wrongNotes[k] = v.slice(0, 600);
+            });
+        }
+        cleanQ.push({
+            subject: String(item.subject || 'Geral').slice(0, 60),
+            q: item.q.slice(0, 1500),
+            options: opts,
+            answer: ans,
+            summary: String(item.summary || 'Gabarito registrado.').slice(0, 1200),
+            wrongNotes
+        });
+    }
+    if (cleanQ.length === 0) return null;
+    const cleanT = Array.isArray(pkg.topics) ? pkg.topics.slice(0, 200).filter(t => t && typeof t.title === 'string').map(t => ({
+        subject: String(t.subject || 'Geral').slice(0, 60),
+        title: t.title.slice(0, 160),
+        body: String(t.body || '').slice(0, 2500),
+        tip: String(t.tip || '').slice(0, 600)
+    })) : [];
+    return {
+        examName: typeof pkg.examName === 'string' ? pkg.examName.slice(0, 80) : null,
+        questions: cleanQ,
+        topics: cleanT
+    };
+}
+
 function importExamPackage(event) {
     const file = event.target.files[0];
     if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('Arquivo muito grande (máximo 5 MB).');
+        return;
+    }
     const reader = new FileReader();
     reader.onload = (e) => {
         try {
-            const pkg = JSON.parse(e.target.result);
-            if (!pkg || !Array.isArray(pkg.questions) || pkg.questions.length === 0) {
-                alert('Arquivo inválido. O JSON precisa conter um array "questions".');
+            const clean = sanitizeExamPackage(safeJsonParse(e.target.result));
+            if (!clean) {
+                showToast('Arquivo inválido. Verifique o formato JSON.');
                 return;
             }
-            appState.customQuestions = pkg.questions;
-            appState.customTopics = Array.isArray(pkg.topics) ? pkg.topics : [];
-            if (pkg.examName) appState.examName = pkg.examName;
+            appState.customQuestions = clean.questions;
+            appState.customTopics = clean.topics;
+            if (clean.examName) appState.examName = clean.examName;
+            appState.hasConfigured = true;
             appState.activeSession = null;
             saveState();
             updateHeaderBrand();
             renderProvasTab();
             closeConfigModal();
-            showToast(`Concurso "${appState.examName}" carregado (${pkg.questions.length} questões)!`);
+            showToast(`Concurso "${appState.examName}" carregado (${clean.questions.length} questões)!`);
         } catch (err) {
-            alert('Erro ao ler o arquivo JSON do concurso.');
+            showToast('Erro ao ler o arquivo JSON.');
         }
     };
     reader.readAsText(file);
@@ -2603,6 +2653,7 @@ async function handleSetupFiles(fileList) {
     let detectedName = '';
 
     for (const file of files) {
+        if (file.size > 5 * 1024 * 1024) continue;
         const ext = file.name.split('.').pop().toLowerCase();
         const baseName = file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ');
         if (!detectedName) detectedName = baseName;
@@ -2610,11 +2661,11 @@ async function handleSetupFiles(fileList) {
         if (ext === 'json') {
             try {
                 const txt = await file.text();
-                const pkg = JSON.parse(txt);
-                if (pkg && Array.isArray(pkg.questions)) {
-                    loadedQ.push(...pkg.questions);
-                    if (Array.isArray(pkg.topics)) loadedT.push(...pkg.topics);
-                    if (pkg.examName) detectedName = pkg.examName;
+                const clean = sanitizeExamPackage(safeJsonParse(txt));
+                if (clean) {
+                    loadedQ.push(...clean.questions);
+                    loadedT.push(...clean.topics);
+                    if (clean.examName) detectedName = clean.examName;
                 }
             } catch (e) {}
         } else if (ext === 'txt' || ext === 'md' || ext === 'csv') {
@@ -2925,7 +2976,7 @@ function renderActiveQuestion() {
 
     let html = `
         <div class="q-meta">
-            <span class="q-badge">${subj}</span>
+            <span class="q-badge">${escHtml(subj)}</span>
             <button class="btn btn-outline btn-sm" onclick="toggleFlagCurrent()" style="${s.flagged[pos] ? 'border-color:#fcd34d;background:#fffbeb;color:#b45309;' : ''}">
                 ${s.flagged[pos] ? '⚑ Marcada' : '⚐ Revisar'}
             </button>
@@ -3291,26 +3342,49 @@ function exportBackup() {
 function importBackup(event) {
     const file = event.target.files[0];
     if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('Backup muito grande (máximo 5 MB).');
+        return;
+    }
     const reader = new FileReader();
     reader.onload = (e) => {
         try {
-            const parsed = JSON.parse(e.target.result);
-            if (parsed && parsed.dailyHistory) {
-                appState = parsed;
-                saveState();
-                updateCountdown();
-                renderHistoryTab();
-                alert('Backup importado com sucesso!');
+            const parsed = safeJsonParse(e.target.result);
+            if (!parsed || typeof parsed !== 'object' || typeof parsed.dailyHistory !== 'object') {
+                showToast('Arquivo de backup inválido.');
+                return;
             }
+            const cleanPkg = parsed.customQuestions ? sanitizeExamPackage({ examName: parsed.examName, questions: parsed.customQuestions, topics: parsed.customTopics }) : null;
+            appState = {
+                ...createEmptyProfile(typeof parsed.userName === 'string' ? parsed.userName.slice(0, 50) : appState.userName),
+                examName: typeof parsed.examName === 'string' ? parsed.examName.slice(0, 80) : appState.examName,
+                examDate: /^\d{4}-\d{2}-\d{2}$/.test(parsed.examDate) ? parsed.examDate : appState.examDate,
+                dailyGoal: Number.isInteger(parsed.dailyGoal) && parsed.dailyGoal >= 5 && parsed.dailyGoal <= 150 ? parsed.dailyGoal : 50,
+                hasConfigured: true,
+                customQuestions: cleanPkg ? cleanPkg.questions : null,
+                customTopics: cleanPkg ? cleanPkg.topics : null,
+                activeSession: null,
+                dailyHistory: parsed.dailyHistory
+            };
+            saveState();
+            updateHeaderBrand();
+            updateCountdown();
+            renderHistoryTab();
+            showToast('Backup importado com segurança!');
         } catch (err) {
-            alert('Arquivo de backup inválido.');
+            showToast('Arquivo de backup inválido.');
         }
     };
     reader.readAsText(file);
 }
 
 function escHtml(str) {
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }
 
 const studyTopics = [
@@ -3508,12 +3582,12 @@ function shareVia(channel) {
         return;
     }
     if (channel === 'whatsapp') {
-        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
         return;
     }
     if (channel === 'linkedin') {
         navigator.clipboard.writeText(text).catch(() => {});
-        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank', 'noopener');
+        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
         showToast('Texto copiado! Cole no seu post do LinkedIn.');
         return;
     }
