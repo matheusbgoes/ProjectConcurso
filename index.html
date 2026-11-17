@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#ffffff">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="ProjectConcurso — Plataforma Gratuita de Estudos para Concursos">
+    <meta property="og:description" content="Monte simulados com seus arquivos ou IA, acompanhe meta diária, histórico por assunto e desempenho semanal no PC ou celular.">
+    <meta property="og:url" content="https://matheusbgoes.github.io/ProjectConcurso/">
+    <meta property="og:image" content="https://matheusbgoes.github.io/ProjectConcurso/docs/desktop.png">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231d4ed8'/%3E%3Cpath d='M20 33l8 8 16-18' fill='none' stroke='%23ffffff' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
     <link rel="manifest" href="./manifest.json">
     <title>ProjectConcurso • Plataforma de Estudos</title>
     <style>
@@ -785,6 +791,7 @@
                 Definir data da prova
             </button>
             <button class="btn btn-outline btn-sm" onclick="openSetupScreen()" title="Montar novo concurso com arquivos" style="min-height:32px;padding:4px 10px;">Novo Concurso</button>
+            <button class="btn btn-outline btn-sm" onclick="openShareModal()" title="Compartilhar resultado ou prova" style="min-height:32px;padding:4px 10px;">Compartilhar</button>
             <button class="btn btn-outline btn-sm" onclick="openConfigModal('profile')" title="Configurar perfil, concurso ou IA" style="min-height:32px;padding:4px 10px;">Configurar</button>
             <button class="btn btn-outline btn-sm" id="theme-btn" onclick="toggleDarkMode()" title="Alternar tema claro/escuro" style="min-height:32px;padding:4px 10px;">Escuro</button>
         </div>
@@ -993,6 +1000,10 @@
                     <h2 class="card-title">Questões na Semana (Seg–Dom)</h2>
                     <p class="card-sub">Acompanhamento de constância e acertos</p>
                 </div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                    <button class="btn btn-outline btn-sm" onclick="downloadShareCard()">Baixar Card (.png)</button>
+                    <button class="btn btn-primary btn-sm" onclick="openShareModal()">Compartilhar</button>
+                </div>
             </div>
             <div class="week-chart" id="week-chart"></div>
         </div>
@@ -1171,6 +1182,25 @@
                 </label>
                 <button class="btn btn-outline btn-sm" onclick="restoreDefaultPackage()" style="flex:1;">Restaurar Modelo</button>
             </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-backdrop" id="share-modal">
+    <div class="modal-box" style="max-width: 440px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <h3 class="card-title">Compartilhar nas Redes</h3>
+            <button class="btn btn-outline btn-sm" onclick="closeShareModal()" style="min-height:30px;padding:2px 10px;">✕</button>
+        </div>
+        <p class="card-sub" style="margin-bottom:12px;">Compartilhe seu ritmo semanal com amigos, grupos de estudo ou no LinkedIn.</p>
+        <div id="share-preview-text" style="padding:12px;border-radius:8px;background:var(--bg);border:1px solid var(--border);font-size:12.5px;line-height:1.5;margin-bottom:14px;white-space:pre-line;"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <button class="btn btn-primary btn-sm" onclick="shareVia('native')">Compartilhar (Celular)</button>
+            <button class="btn btn-outline btn-sm" onclick="shareVia('whatsapp')">WhatsApp</button>
+            <button class="btn btn-outline btn-sm" onclick="shareVia('linkedin')">LinkedIn</button>
+            <button class="btn btn-outline btn-sm" onclick="shareVia('copy')">Copiar Texto</button>
+            <button class="btn btn-outline btn-sm" onclick="downloadShareCard()">Baixar Card (.png)</button>
+            <button class="btn btn-outline btn-sm" onclick="exportExamPackage()">Enviar Prova (.json)</button>
         </div>
     </div>
 </div>
@@ -3420,6 +3450,150 @@ function toggleDarkMode() {
     const next = !document.body.classList.contains('dark');
     localStorage.setItem('projectconcurso_dark', next ? '1' : '0');
     applyTheme();
+}
+
+function getWeeklySummaryStats() {
+    const week = getWeekDays();
+    let totalQ = 0, totalH = 0, totalSec = 0;
+    week.forEach(w => {
+        const d = appState.dailyHistory[w.key];
+        if (d) {
+            totalQ += d.questions.length;
+            d.questions.forEach(q => {
+                if (q.correct) totalH++;
+                totalSec += (q.timeSec || 0);
+            });
+        }
+    });
+    const pct = totalQ ? Math.round((totalH / totalQ) * 100) : 0;
+    const avgSec = totalQ ? Math.round(totalSec / totalQ) : 0;
+    return { totalQ, totalH, pct, avgSec, streak: getStreakDays() };
+}
+
+function buildShareText() {
+    const st = getWeeklySummaryStats();
+    const url = 'https://matheusbgoes.github.io/ProjectConcurso/';
+    if (st.totalQ > 0) {
+        return `Minha semana no ProjectConcurso (${appState.examName || 'Simulado'}):\n• ${st.totalQ} questões resolvidas (${st.pct}% de acerto)\n• Ofensiva: ${st.streak} dia(s) seguidos\n• Ritmo médio: ${formatSec(st.avgSec)} por questão\n\nMonte o seu simulado grátis aqui: ${url}`;
+    }
+    return `Estou organizando meus estudos no ProjectConcurso — plataforma gratuita para montar simulados com seus arquivos ou IA e acompanhar sua meta diária no PC ou celular:\n${url}`;
+}
+
+function openShareModal() {
+    document.getElementById('share-preview-text').innerText = buildShareText();
+    document.getElementById('share-modal').classList.add('open');
+}
+
+function closeShareModal() {
+    document.getElementById('share-modal').classList.remove('open');
+}
+
+function shareVia(channel) {
+    const text = buildShareText();
+    const url = 'https://matheusbgoes.github.io/ProjectConcurso/';
+    if (channel === 'native') {
+        if (navigator.share) {
+            navigator.share({ title: 'ProjectConcurso', text, url }).catch(() => {});
+        } else {
+            navigator.clipboard.writeText(text).then(() => showToast('Texto copiado para compartilhar!'));
+        }
+        return;
+    }
+    if (channel === 'whatsapp') {
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+        return;
+    }
+    if (channel === 'linkedin') {
+        navigator.clipboard.writeText(text).catch(() => {});
+        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank', 'noopener');
+        showToast('Texto copiado! Cole no seu post do LinkedIn.');
+        return;
+    }
+    if (channel === 'copy') {
+        navigator.clipboard.writeText(text).then(() => showToast('Resumo copiado!')).catch(() => {});
+    }
+}
+
+function downloadShareCard() {
+    const st = getWeeklySummaryStats();
+    const canvas = document.createElement('canvas');
+    canvas.width = 1080;
+    canvas.height = 1080;
+    const ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, 1080, 1080);
+
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(70, 70, 940, 940);
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(70, 70, 940, 940);
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillRect(70, 70, 940, 12);
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 34px sans-serif';
+    ctx.fillText('PROJECTCONCURSO', 130, 175);
+
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = 'bold 54px sans-serif';
+    ctx.fillText(appState.userName || 'Estudante', 130, 260);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '32px sans-serif';
+    ctx.fillText((appState.examName || 'Simulado').slice(0, 42), 130, 318);
+
+    const boxes = [
+        { lbl: 'ACERTO SEMANAL', val: `${st.pct}%` },
+        { lbl: 'QUESTÕES NA SEMANA', val: `${st.totalQ}` },
+        { lbl: 'DIAS SEGUIDOS', val: `${st.streak}d` },
+        { lbl: 'MÉDIA POR QUESTÃO', val: `${formatSec(st.avgSec)}` }
+    ];
+    boxes.forEach((b, i) => {
+        const col = i % 2;
+        const row = Math.floor(i / 2);
+        const bx = 130 + col * 425;
+        const by = 400 + row * 210;
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(bx, by, 395, 175);
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = 'bold 64px sans-serif';
+        ctx.fillText(b.val, bx + 32, by + 95);
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = 'bold 22px sans-serif';
+        ctx.fillText(b.lbl, bx + 32, by + 140);
+    });
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '26px sans-serif';
+    ctx.fillText('matheusbgoes.github.io/ProjectConcurso', 130, 915);
+    ctx.fillStyle = '#64748b';
+    ctx.font = '22px sans-serif';
+    ctx.fillText('Criado por Matheus Goes', 130, 955);
+
+    const a = document.createElement('a');
+    a.download = `projectconcurso_resumo_${todayKey()}.png`;
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+    showToast('Card .png baixado para compartilhar!');
+}
+
+function exportExamPackage() {
+    const pkg = {
+        examName: appState.examName || 'Simulado ProjectConcurso',
+        questions: getActiveQuizData(),
+        topics: getActiveTopics()
+    };
+    const blob = new Blob([JSON.stringify(pkg, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `simulado_${(appState.examName || 'concurso').toLowerCase().replace(/[^a-z0-9]+/g, '_')}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Pacote da prova exportado (.json)!');
 }
 
 window.onload = () => {
