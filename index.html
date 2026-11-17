@@ -269,6 +269,45 @@
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 12px;
         }
+        .exam-grid.two-col {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        @media (max-width: 640px) {
+            .exam-grid.two-col { grid-template-columns: 1fr; }
+        }
+        .toast {
+            position: fixed;
+            bottom: 76px;
+            left: 50%;
+            transform: translateX(-50%) translateY(16px);
+            background: #111827;
+            color: #ffffff;
+            padding: 9px 16px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s, transform 0.2s;
+            z-index: 80;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .user-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            background: var(--bg);
+        }
+        .user-row.active-user {
+            border-color: var(--accent);
+            background: var(--accent-soft);
+        }
         .exam-option {
             border: 1px solid var(--border);
             border-radius: 10px;
@@ -686,7 +725,7 @@
     <div class="topbar-inner">
         <div class="brand">
             <h1 id="brand-title">ProjectConcurso • Simulado Modelo</h1>
-            <span id="brand-user">Olá, Estudante • <small style="opacity:0.8;">por Matheus Goes</small></span>
+            <span id="brand-user" onclick="openConfigModal('users')" style="cursor:pointer;" title="Clique para trocar ou criar seu usuário exclusivo">Olá, Estudante • <small style="opacity:0.8;">por Matheus Goes</small></span>
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
             <button class="countdown-pill" id="countdown-pill" onclick="openConfigModal('profile')" title="Clique para ajustar a data da prova">
@@ -757,7 +796,7 @@
                     <p class="card-sub">Combinações prontas com todas as matérias do concurso ativo</p>
                 </div>
             </div>
-            <div class="exam-grid">
+            <div class="exam-grid two-col">
                 <button class="exam-option" onclick="startSession('model_balanced')">
                     <span class="exam-tag" id="model-a-tag">Meta Diária • Proporcional</span>
                     <h3>Modelo A: Rotina Equilibrada</h3>
@@ -947,7 +986,17 @@
         </div>
         <div class="filter-row" style="margin-bottom:14px;">
             <button class="filter-pill active" id="cfg-tab-profile" onclick="switchConfigPane('profile')">Perfil & Meta</button>
+            <button class="filter-pill" id="cfg-tab-users" onclick="switchConfigPane('users')">Usuários</button>
             <button class="filter-pill" id="cfg-tab-ai" onclick="switchConfigPane('ai')">Trocar Concurso (IA)</button>
+        </div>
+
+        <div id="cfg-pane-users" class="hidden">
+            <p class="card-sub" style="margin-bottom:12px;">Cada usuário possui seu próprio histórico diário, meta, concurso e progresso isolados neste dispositivo.</p>
+            <div id="users-list"></div>
+            <div style="display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+                <input type="text" class="search-input" id="new-user-name" placeholder="Nome do novo usuário..." style="margin:0;flex:1;">
+                <button class="btn btn-primary btn-sm" onclick="createNewUser()">+ Criar</button>
+            </div>
         </div>
 
         <div id="cfg-pane-profile">
@@ -993,6 +1042,8 @@
         </div>
     </div>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <script>
 const quizData = [
@@ -2000,24 +2051,67 @@ const quizData = [
         }
     ];
 
-const STORAGE_KEY = 'ufpe_study_matheus_v1';
+const LEGACY_KEY = 'ufpe_study_matheus_v1';
+const PROFILES_KEY = 'projectconcurso_profiles_v1';
 
-function loadState() {
-    let parsed = null;
-    try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) parsed = JSON.parse(raw);
-    } catch (e) {}
+function createEmptyProfile(name) {
     return {
-        userName: parsed?.userName || 'Estudante',
-        examName: parsed?.examName || 'Simulado Modelo (UFPE/FADE)',
-        examDate: parsed?.examDate || '2026-12-20',
-        dailyGoal: parsed?.dailyGoal || 50,
-        customQuestions: parsed?.customQuestions || null,
-        customTopics: parsed?.customTopics || null,
-        activeSession: parsed?.activeSession || null,
-        dailyHistory: parsed?.dailyHistory || {}
+        userName: name || 'Estudante',
+        examName: 'Simulado Modelo (UFPE/FADE)',
+        examDate: '2026-12-20',
+        dailyGoal: 50,
+        customQuestions: null,
+        customTopics: null,
+        activeSession: null,
+        dailyHistory: {}
     };
+}
+
+function loadProfilesStore() {
+    try {
+        const raw = localStorage.getItem(PROFILES_KEY);
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && parsed.profiles && Object.keys(parsed.profiles).length > 0) {
+                return parsed;
+            }
+        }
+    } catch (e) {}
+
+    // Migrate legacy single-profile data if present
+    let initial = createEmptyProfile('Estudante');
+    try {
+        const legacyRaw = localStorage.getItem(LEGACY_KEY);
+        if (legacyRaw) {
+            const lp = JSON.parse(legacyRaw);
+            initial = { ...initial, ...lp };
+        }
+    } catch (e) {}
+
+    const store = {
+        activeProfileId: 'p_default',
+        profiles: { p_default: initial }
+    };
+    localStorage.setItem(PROFILES_KEY, JSON.stringify(store));
+    return store;
+}
+
+let profilesStore = loadProfilesStore();
+let appState = profilesStore.profiles[profilesStore.activeProfileId] || Object.values(profilesStore.profiles)[0];
+
+function saveState() {
+    profilesStore.profiles[profilesStore.activeProfileId] = appState;
+    localStorage.setItem(PROFILES_KEY, JSON.stringify(profilesStore));
+}
+
+let toastTimer = null;
+function showToast(msg) {
+    const el = document.getElementById('toast');
+    if (!el) return;
+    el.innerText = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
 }
 
 function getActiveQuizData() {
@@ -2043,12 +2137,7 @@ function getActiveSubjects() {
 
 function updateHeaderBrand() {
     document.getElementById('brand-title').innerText = `ProjectConcurso • ${appState.examName || 'Simulado Modelo'}`;
-    document.getElementById('brand-user').innerHTML = `Olá, ${escHtml(appState.userName || 'Estudante')} • <small style="opacity:0.75;">criado por Matheus Goes</small>`;
-}
-
-let appState = loadState();
-function saveState() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+    document.getElementById('brand-user').innerHTML = `Perfil: <strong>${escHtml(appState.userName || 'Estudante')}</strong> • <small style="opacity:0.75;">criado por Matheus Goes</small>`;
 }
 
 let timerInt = null;
@@ -2095,11 +2184,83 @@ function closeConfigModal() {
     document.getElementById('config-modal').classList.remove('open');
 }
 function switchConfigPane(pane) {
-    const isProf = pane === 'profile';
-    document.getElementById('cfg-pane-profile').classList.toggle('hidden', !isProf);
-    document.getElementById('cfg-pane-ai').classList.toggle('hidden', isProf);
-    document.getElementById('cfg-tab-profile').classList.toggle('active', isProf);
-    document.getElementById('cfg-tab-ai').classList.toggle('active', !isProf);
+    ['profile', 'users', 'ai'].forEach(p => {
+        document.getElementById(`cfg-pane-${p}`).classList.toggle('hidden', p !== pane);
+        document.getElementById(`cfg-tab-${p}`).classList.toggle('active', p === pane);
+    });
+    if (pane === 'users') renderUsersList();
+}
+
+function renderUsersList() {
+    const list = document.getElementById('users-list');
+    const entries = Object.entries(profilesStore.profiles);
+    list.innerHTML = entries.map(([id, p]) => {
+        const isActive = id === profilesStore.activeProfileId;
+        const totalQ = Object.values(p.dailyHistory || {}).reduce((acc, d) => acc + (d.questions ? d.questions.length : 0), 0);
+        return `
+            <div class="user-row ${isActive ? 'active-user' : ''}">
+                <div>
+                    <strong style="font-size:13.5px;">${escHtml(p.userName || 'Estudante')}</strong>
+                    <div style="font-size:12px;color:var(--text-muted);">${escHtml(p.examName || 'Simulado Modelo')} • ${totalQ} questões</div>
+                </div>
+                <div style="display:flex;gap:6px;">
+                    ${isActive ? '<span class="exam-tag" style="background:var(--accent);color:#fff;">Ativo</span>' : `<button class="btn btn-outline btn-sm" onclick="switchUser('${id}')">Usar</button>`}
+                    ${entries.length > 1 ? `<button class="btn btn-outline btn-sm" onclick="deleteUser('${id}')" style="color:var(--red);">Excluir</button>` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function createNewUser() {
+    const input = document.getElementById('new-user-name');
+    const name = input.value.trim();
+    if (!name) {
+        showToast('Digite um nome para o novo usuário.');
+        return;
+    }
+    const id = 'p_' + Date.now();
+    profilesStore.profiles[id] = createEmptyProfile(name);
+    profilesStore.activeProfileId = id;
+    appState = profilesStore.profiles[id];
+    input.value = '';
+    saveState();
+    updateHeaderBrand();
+    updateCountdown();
+    renderUsersList();
+    switchTab('provas');
+    showToast(`Perfil "${name}" criado e ativado!`);
+}
+
+function switchUser(id) {
+    if (!profilesStore.profiles[id]) return;
+    profilesStore.activeProfileId = id;
+    appState = profilesStore.profiles[id];
+    saveState();
+    updateHeaderBrand();
+    updateCountdown();
+    renderUsersList();
+    switchTab('provas');
+    showToast(`Perfil "${appState.userName}" selecionado!`);
+}
+
+function deleteUser(id) {
+    const keys = Object.keys(profilesStore.profiles);
+    if (keys.length <= 1) return;
+    const name = profilesStore.profiles[id]?.userName || 'usuário';
+    if (!confirm(`Excluir o perfil "${name}" e todo o seu histórico local?`)) return;
+    delete profilesStore.profiles[id];
+    if (profilesStore.activeProfileId === id) {
+        const nextId = Object.keys(profilesStore.profiles)[0];
+        profilesStore.activeProfileId = nextId;
+        appState = profilesStore.profiles[nextId];
+    }
+    saveState();
+    updateHeaderBrand();
+    updateCountdown();
+    renderUsersList();
+    switchTab('provas');
+    showToast(`Perfil "${name}" excluído.`);
 }
 function saveProfileConfig() {
     const name = document.getElementById('cfg-user-name').value.trim();
@@ -2117,6 +2278,7 @@ function saveProfileConfig() {
     updateCountdown();
     renderProvasTab();
     closeConfigModal();
+    showToast('Configurações salvas!');
 }
 
 function copyAiPrompt() {
@@ -2154,7 +2316,7 @@ function importExamPackage(event) {
             updateHeaderBrand();
             renderProvasTab();
             closeConfigModal();
-            alert(`Concurso "${appState.examName}" carregado com ${pkg.questions.length} questões!`);
+            showToast(`Concurso "${appState.examName}" carregado (${pkg.questions.length} questões)!`);
         } catch (err) {
             alert('Erro ao ler o arquivo JSON do concurso.');
         }
@@ -2171,7 +2333,7 @@ function restoreDefaultPackage() {
     updateHeaderBrand();
     renderProvasTab();
     closeConfigModal();
-    alert('Pacote modelo padrão restaurado!');
+    showToast('Pacote modelo padrão restaurado!');
 }
 
 function switchTab(tabName) {
