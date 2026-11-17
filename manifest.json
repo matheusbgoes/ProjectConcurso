@@ -1,0 +1,10 @@
+{
+  "name": "ProjectConcurso • UFPE/FADE",
+  "short_name": "ProjectConcurso",
+  "description": "Plataforma de estudos diários para concursos de TI (UFPE/FADE) — Matheus Goes",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#1e40af",
+  "lang": "pt-BR"
+}
