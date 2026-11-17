@@ -1,4 +1,4 @@
-const CACHE_NAME = 'projectconcurso-v1';
+const CACHE_NAME = 'projectconcurso-v2';
 const ASSETS = ['./', './index.html', './manifest.json'];
 
 self.addEventListener('install', (event) => {
