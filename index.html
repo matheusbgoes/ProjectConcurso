@@ -9,15 +9,15 @@
     <title>ProjectConcurso • Plataforma de Estudos</title>
     <style>
         :root {
-            --bg: #f8fafc;
+            --bg: #f4f5f7;
             --surface: #ffffff;
             --surface-alt: #f1f5f9;
-            --border: #e2e8f0;
-            --border-strong: #cbd5e1;
-            --text: #0f172a;
-            --text-muted: #64748b;
-            --accent: #1e40af;
-            --accent-hover: #1e3a8a;
+            --border: #e5e7eb;
+            --border-strong: #d1d5db;
+            --text: #111827;
+            --text-muted: #6b7280;
+            --accent: #1d4ed8;
+            --accent-hover: #1e40af;
             --accent-soft: #eff6ff;
             --green: #15803d;
             --green-bg: #f0fdf4;
@@ -25,9 +25,10 @@
             --red: #b91c1c;
             --red-bg: #fef2f2;
             --red-border: #fca5a5;
-            --amber: #d97706;
+            --amber: #b45309;
             --amber-bg: #fffbeb;
-            --radius: 12px;
+            --radius: 10px;
+            --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
@@ -161,7 +162,50 @@
             border-radius: var(--radius);
             padding: 20px;
             margin-bottom: 16px;
+            box-shadow: var(--shadow-sm);
         }
+        .guide-banner {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--accent);
+            border-radius: var(--radius);
+            padding: 16px 18px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow-sm);
+        }
+        .guide-steps {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        @media (max-width: 640px) { .guide-steps { grid-template-columns: 1fr; } }
+        .guide-step {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 12.5px;
+            line-height: 1.45;
+            color: var(--text-muted);
+        }
+        .guide-step strong { display: block; color: var(--text); margin-bottom: 2px; font-size: 13px; }
+        .opt-letter {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            background: var(--surface-alt);
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .options-list li.correct .opt-letter { background: #bbf7d0; color: var(--green); }
+        .options-list li.wrong .opt-letter { background: #fecaca; color: var(--red); }
+        .timer-chip, .stat-val, .exam-tag { font-variant-numeric: tabular-nums; }
         .card-header {
             display: flex;
             align-items: center;
@@ -648,8 +692,8 @@
             <button class="countdown-pill" id="countdown-pill" onclick="openConfigModal('profile')" title="Clique para ajustar a data da prova">
                 Definir data da prova
             </button>
-            <button class="btn btn-outline btn-sm" onclick="openConfigModal('ai')" title="Configurar concurso ou trocar prova com IA" style="min-height:32px;padding:4px 10px;">⚙️ Meu Concurso</button>
-            <button class="btn btn-outline btn-sm" id="theme-btn" onclick="toggleDarkMode()" title="Alternar tema claro/escuro" style="min-height:32px;padding:4px 9px;">🌙</button>
+            <button class="btn btn-outline btn-sm" onclick="openConfigModal('ai')" title="Configurar concurso ou trocar prova com IA" style="min-height:32px;padding:4px 10px;">Configurar</button>
+            <button class="btn btn-outline btn-sm" id="theme-btn" onclick="toggleDarkMode()" title="Alternar tema claro/escuro" style="min-height:32px;padding:4px 10px;">Escuro</button>
         </div>
     </div>
 </header>
@@ -665,6 +709,18 @@
 <main class="container">
     <!-- TAB: PROVAS (MENU PRINCIPAL) -->
     <section id="tab-provas">
+        <div class="guide-banner" id="onboarding-banner">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+                <strong style="font-size:14px;">Comece em 3 passos simples</strong>
+                <button class="btn btn-outline btn-sm" onclick="dismissOnboarding()" style="min-height:28px;padding:2px 10px;font-size:12px;">Entendi</button>
+            </div>
+            <div class="guide-steps">
+                <div class="guide-step"><strong>1. Defina sua prova</strong>Clique em <em>Configurar</em> no topo para colocar seu nome, concurso, data e meta diária (ou gerar questões com IA).</div>
+                <div class="guide-step"><strong>2. Resolva o bloco diário</strong>Faça sua meta diária no celular ou PC. Se sair no meio, seu progresso fica salvo para continuar depois.</div>
+                <div class="guide-step"><strong>3. Revise seus erros</strong>Veja na hora o motivo do erro, consulte a aba <em>Assuntos</em> e acompanhe sua média semanal.</div>
+            </div>
+        </div>
+
         <div class="card">
             <div class="card-header">
                 <div>
@@ -672,7 +728,7 @@
                     <p class="card-sub" id="daily-goal-sub">0 de 50 questões concluídas hoje</p>
                 </div>
                 <div style="display:flex;gap:6px;align-items:center;">
-                    <span class="exam-tag" id="streak-tag" title="Dias seguidos estudando">🔥 0d</span>
+                    <span class="exam-tag" id="streak-tag" title="Dias seguidos estudando">0 dias seguidos</span>
                     <span class="exam-tag" id="daily-pct-tag">0%</span>
                 </div>
             </div>
@@ -731,7 +787,7 @@
                     <h2 class="card-title">Prova Completa e Treinos por Matéria</h2>
                     <p class="card-sub">Gerado automaticamente a partir do concurso selecionado</p>
                 </div>
-                <button class="btn btn-outline btn-sm" onclick="openConfigModal('ai')">🤖 Trocar Concurso</button>
+                <button class="btn btn-outline btn-sm" onclick="openConfigModal('ai')">Trocar Concurso</button>
             </div>
             <div class="exam-grid" id="subject-train-grid"></div>
         </div>
@@ -858,13 +914,28 @@
     </section>
 </main>
 
-<!-- Bottom Nav for Mobile (Samsung S23 FE) -->
+<!-- Bottom Nav for Mobile (Qualquer Celular) -->
 <nav class="mobile-nav" id="mobile-nav">
-    <button class="mobile-tab active" data-tab="provas" onclick="switchTab('provas')"><span class="icon">📝</span>Provas</button>
-    <button class="mobile-tab" data-tab="assuntos" onclick="switchTab('assuntos')"><span class="icon">📖</span>Assuntos</button>
-    <button class="mobile-tab" data-tab="historico" onclick="switchTab('historico')"><span class="icon">📅</span>Histórico</button>
-    <button class="mobile-tab" data-tab="semanal" onclick="switchTab('semanal')"><span class="icon">📊</span>Semanal</button>
-    <button class="mobile-tab" data-tab="dicas" onclick="switchTab('dicas')"><span class="icon">💡</span>Dicas</button>
+    <button class="mobile-tab active" data-tab="provas" onclick="switchTab('provas')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Provas
+    </button>
+    <button class="mobile-tab" data-tab="assuntos" onclick="switchTab('assuntos')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        Assuntos
+    </button>
+    <button class="mobile-tab" data-tab="historico" onclick="switchTab('historico')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Histórico
+    </button>
+    <button class="mobile-tab" data-tab="semanal" onclick="switchTab('semanal')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Semanal
+    </button>
+    <button class="mobile-tab" data-tab="dicas" onclick="switchTab('dicas')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        Dicas
+    </button>
 </nav>
 
 <!-- Config & AI Exam Switcher Modal -->
@@ -910,14 +981,14 @@
             <label style="font-size:12.5px;font-weight:600;">Quanto tempo tem até a prova?</label>
             <input type="text" class="search-input" id="ai-time-input" placeholder="Ex: 45 dias, fazendo 50 questões/dia" style="margin-top:4px;">
 
-            <button class="btn btn-primary btn-full btn-sm" onclick="copyAiPrompt()" id="copy-prompt-btn" style="margin-bottom:10px;">🤖 Gerar e Copiar Prompt para Agente IA</button>
+            <button class="btn btn-primary btn-full btn-sm" onclick="copyAiPrompt()" id="copy-prompt-btn" style="margin-bottom:10px;">Gerar e Copiar Prompt para Agente IA</button>
 
             <div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--border);">
                 <label class="btn btn-outline btn-sm" style="flex:1;margin:0;cursor:pointer;">
-                    📥 Importar Pacote (.json)
+                    Importar Pacote (.json)
                     <input type="file" accept=".json" style="display:none;" onchange="importExamPackage(event)">
                 </label>
-                <button class="btn btn-outline btn-sm" onclick="restoreDefaultPackage()" style="flex:1;">↺ Restaurar Modelo</button>
+                <button class="btn btn-outline btn-sm" onclick="restoreDefaultPackage()" style="flex:1;">Restaurar Modelo</button>
             </div>
         </div>
     </div>
@@ -2167,7 +2238,9 @@ function renderProvasTab() {
     document.getElementById('model-a-tag').innerText = `${goal} Questões • Proporcional`;
     document.getElementById('daily-pct-tag').innerText = `${pct}%`;
     document.getElementById('daily-progress-fill').style.width = `${pct}%`;
-    document.getElementById('streak-tag').innerText = `🔥 ${getStreakDays()}d`;
+    document.getElementById('streak-tag').innerText = `${getStreakDays()}d seguidos`;
+    const banner = document.getElementById('onboarding-banner');
+    if (banner) banner.classList.toggle('hidden', localStorage.getItem('projectconcurso_hide_guide') === '1');
 
     const errCount = getErrorQuestionIndices().length;
     const errTag = document.getElementById('errors-count-tag');
@@ -2368,13 +2441,16 @@ function renderActiveQuestion() {
         if (isAnswered) {
             if (oi === item.answer) {
                 cls = 'correct';
-                tag = `<span class="status-tag">${userAns === oi ? '✓ Correta' : '✓ Gabarito'}</span>`;
+                tag = `<span class="status-tag">${userAns === oi ? 'Correta' : 'Gabarito'}</span>`;
             } else if (oi === userAns) {
                 cls = 'wrong';
-                tag = `<span class="status-tag">✕ Sua escolha</span>`;
+                tag = `<span class="status-tag">Sua escolha</span>`;
             }
         }
-        html += `<li class="${cls}" ${isAnswered ? '' : `onclick="answerQuestion(${oi})"`}><span>${escHtml(opt)}</span>${tag}</li>`;
+        const letterMatch = opt.match(/^([A-E])\)\s*([\s\S]*)$/);
+        const letter = letterMatch ? letterMatch[1] : String.fromCharCode(65 + oi);
+        const optBody = letterMatch ? letterMatch[2] : opt;
+        html += `<li class="${cls}" ${isAnswered ? '' : `onclick="answerQuestion(${oi})"`}><span style="display:flex;align-items:center;gap:10px;"><span class="opt-letter">${letter}</span><span>${escHtml(optBody)}</span></span>${tag}</li>`;
     });
 
     html += `</ul>`;
@@ -2385,10 +2461,10 @@ function renderActiveQuestion() {
             const specificWrong = (item.wrongNotes && item.wrongNotes[userAns])
                 ? item.wrongNotes[userAns]
                 : `A alternativa marcada ("${chosenOpt.replace(/^[A-E]\)\s*/, '')}") não corresponde ao conceito exigido pelo enunciado. A resposta correta é "${correctOpt.replace(/^[A-E]\)\s*/, '')}".`;
-            html += `<div class="error-box"><strong>✕ Por que você errou:</strong><br>${escHtml(specificWrong)}</div>`;
-            html += `<div class="summary-box"><strong>Gabarito comentado:</strong><br>${escHtml(item.summary)}<div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;"><span style="font-size:12px;color:var(--text-muted);">Tempo nesta questão: ${formatSec(s.times[pos])}</span><button class="btn btn-outline btn-sm" onclick="openTopicFromQuestion('${escHtml(subj)}')">📖 Entender este assunto</button></div></div>`;
+            html += `<div class="error-box"><strong>Por que você errou:</strong><br>${escHtml(specificWrong)}</div>`;
+            html += `<div class="summary-box"><strong>Gabarito comentado:</strong><br>${escHtml(item.summary)}<div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;"><span style="font-size:12px;color:var(--text-muted);">Tempo nesta questão: ${formatSec(s.times[pos])}</span><button class="btn btn-outline btn-sm" onclick="openTopicFromQuestion('${escHtml(subj)}')">Entender este assunto</button></div></div>`;
         } else {
-            html += `<div class="summary-box ok-box"><strong>✓ Resposta Correta — Gabarito comentado:</strong><br>${escHtml(item.summary)}<div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;"><span style="font-size:12px;color:var(--green);">Tempo nesta questão: ${formatSec(s.times[pos])}</span><button class="btn btn-outline btn-sm" onclick="openTopicFromQuestion('${escHtml(subj)}')">📖 Revisar assunto</button></div></div>`;
+            html += `<div class="summary-box ok-box"><strong>Resposta Correta — Gabarito comentado:</strong><br>${escHtml(item.summary)}<div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;"><span style="font-size:12px;color:var(--green);">Tempo nesta questão: ${formatSec(s.times[pos])}</span><button class="btn btn-outline btn-sm" onclick="openTopicFromQuestion('${escHtml(subj)}')">Revisar assunto</button></div></div>`;
         }
     }
     card.innerHTML = html;
@@ -2852,11 +2928,17 @@ function renderTopicsTab() {
     `).join('');
 }
 
+function dismissOnboarding() {
+    localStorage.setItem('projectconcurso_hide_guide', '1');
+    const banner = document.getElementById('onboarding-banner');
+    if (banner) banner.classList.add('hidden');
+}
+
 function applyTheme() {
     const isDark = localStorage.getItem('projectconcurso_dark') === '1';
     document.body.classList.toggle('dark', isDark);
     const btn = document.getElementById('theme-btn');
-    if (btn) btn.innerText = isDark ? '☀️' : '🌙';
+    if (btn) btn.innerText = isDark ? 'Claro' : 'Escuro';
 }
 
 function toggleDarkMode() {
