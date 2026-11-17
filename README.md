@@ -1,56 +1,68 @@
 # ProjectConcurso
 
-Plataforma gratuita, simples e **beginner-friendly** para qualquer pessoa estudar diariamente para **qualquer concurso público, certificação ou prova**, no **computador** ou em **qualquer celular (Android ou iOS)**.
+Plataforma gratuita, responsiva (PWA) e **beginner-friendly** para qualquer pessoa estudar diariamente para **qualquer concurso público, certificação ou prova**, no **computador** ou em **qualquer celular (Android ou iOS)** — inclusive offline após o primeiro acesso.
 
-> Criado por **Matheus Goes** — pronto para usar direto no navegador, sem precisar de login ou instalação complexa.
+> Criado por **Matheus Goes** — sem necessidade de login ou servidor complexo.
 
 ---
 
-## Para quem é este projeto?
+## Visual do Projeto
 
-- **Iniciantes e concurseiros de qualquer área:** Já vem pronto com um **simulado modelo completo (80 questões)** e guia de assuntos, mas permite **trocar por completo o concurso, as matérias, a meta diária e as questões** em poucos cliques.
-- **Uso no celular ou PC:** Layout responsivo com barra inferior no celular (ideal para estudar no ônibus, intervalo ou em casa) e cartão-resposta lateral no computador.
-- **Customização com Agente de IA:** Possui um gerador integrado de prompt para IA — você informa qual prova vai fazer, os assuntos que precisa estudar e quanto tempo tem até o dia da prova, e a IA gera um pacote `.json` personalizado para importar direto no app.
+### Computador (Desktop)
+![ProjectConcurso - Visão Desktop](docs/desktop.png)
+
+### Celular (Mobile PWA)
+<p align="center">
+  <img src="docs/mobile.png" alt="ProjectConcurso - Visão Mobile" width="320" />
+</p>
 
 ---
 
 ## Principais Funcionalidades
 
-1. **Configuração Fácil (`⚙️ Meu Concurso`):**
-   - Personalize seu **nome**, o **nome da prova/concurso**, a **data da prova** (com contagem regressiva sutil no topo) e a **meta diária de questões** (ex.: 20, 30, 50...).
-   - **Trocar Concurso por Completo:** Importe um pacote `.json` com novas questões e novos resumos de assuntos, ou restaure o pacote modelo inicial quando quiser.
-   - **Assistente IA Integrado:** Gere um prompt pronto para pedir ao ChatGPT, Gemini, Claude ou outro agente de IA montar questões e explicações sob medida para o seu edital e prazo.
+1. **Perfis Exclusivos e Isolados (`Configurar → Usuários`):**
+   - Cada pessoa pode criar seu **próprio usuário** no mesmo dispositivo, mantendo histórico diário, meta, concurso ativo e sessões salvas totalmente separados.
 
-2. **Provas, Modelos Diários e Retomada Automática:**
-   - **Meta Diária configurável** (padrão inicial: 50 questões/dia) com contador de sequência de dias (`🔥`) e salvamento automático a cada clique.
-   - **Modelos de Provas Diárias:** *Rotina Equilibrada*, *Bloco Express (25 questões)*, *Caderno de Erros* (revisa automaticamente o que você errou), *Prova Completa* e *Treinos por Disciplina* (gerados dinamicamente a partir das matérias do pacote ativo).
+2. **Troca Completa de Concurso com Agente de IA (`Configurar → Trocar Concurso (IA)`):**
+   - Informe **qual prova quer fazer**, **quais matérias precisa estudar** e **quanto tempo tem até a prova**.
+   - Copie o prompt pronto gerado pelo app, cole no ChatGPT, Gemini ou Claude e importe o arquivo `.json` gerado para transformar o **ProjectConcurso** por completo no seu edital.
 
-3. **Correção Imediata + Explicação do Erro:**
-   - Ao errar uma alternativa, o sistema mostra o bloco **Por que você errou**, o **Gabarito comentado** e um botão direto para **Entender este assunto**.
-   - Cronômetro aberto (sem pressão ou bloqueio) registrando o tempo total e o tempo gasto em cada questão.
+3. **Provas, Modelos Diários e Retomada Automática:**
+   - **Meta Diária configurável** (padrão inicial: 50 questões/dia) com ofensiva de dias seguidos e salvamento automático a cada resposta.
+   - **Modelos A/B/C/D:** *Rotina Equilibrada*, *Foco na Matéria Principal*, *Caderno de Erros* (revisa automaticamente o que você errou) e *Bloco Express (25q)*.
+   - **Prova Completa e Treinos por Matéria** gerados dinamicamente a partir do pacote ativo.
 
-4. **Guia de Assuntos (`Assuntos`):**
-   - Resumos didáticos e pesquisáveis por palavra-chave e disciplina, com dicas de prova e botão para treinar o tema na hora.
+4. **Correção Imediata + Explicação do Erro:**
+   - Ao errar uma questão, exibe **Por que você errou**, **Gabarito comentado** e atalho direto para **Entender este assunto**.
+   - Cronômetro aberto registrando tempo total da sessão e tempo individual por questão.
 
-5. **Histórico Diário, Desempenho Semanal e Dicas:**
-   - Histórico dia a dia por assunto, detalhamento questão a questão e **Exportar / Importar Backup (`.json`)** para transferir seu progresso entre celular e PC.
-   - Gráfico semanal de constância e percentual de acertos por disciplina.
-   - Diagnóstico automático + plano progressivo de estudo na aba **Dicas de Evolução**.
-
----
-
-## Como Começar (Passo a Passo)
-
-1. Acesse o link do projeto (ou abra o arquivo `index.html` no navegador do seu computador ou celular).
-2. Clique em **⚙️ Meu Concurso** no topo para colocar seu nome, o concurso que vai prestar, a data da prova e sua meta diária.
-3. Quer estudar para outra prova? Na mesma janela, use a aba **Trocar Concurso (IA)** para gerar o prompt com suas matérias e prazo, peça à sua IA gerar o `.json` e clique em **Importar Pacote (.json)**.
-4. No celular (Android ou iOS), toque em **"Adicionar à tela inicial"** no navegador para usar como aplicativo.
+5. **Guia de Assuntos, Histórico Diário, Desempenho Semanal e Dicas:**
+   - Aba **Assuntos** com busca por palavra-chave e filtro por disciplina.
+   - **Histórico Diário** com detalhamento por questão/tempo e **Exportar / Importar Backup (`.json`)**.
+   - **Desempenho Semanal (%)** com gráfico Seg–Dom e **Dicas de Evolução** automáticas.
+   - **Modo Claro / Escuro** e suporte offline via **Service Worker (`sw.js`)**.
 
 ---
 
-## Estrutura do Pacote de Concurso (`.json`)
+## Como Usar em Qualquer Lugar (GitHub Pages + Celular)
 
-Para trocar todo o conteúdo do **ProjectConcurso**, o arquivo `.json` segue este formato simples:
+1. Acesse o link do **GitHub Pages** do repositório:
+   - `https://matheusbgoes.github.io/ProjectConcurso/`
+2. No **celular (Android ou iOS)**, abra o link no navegador e toque em **"Adicionar à tela inicial"** para instalar como aplicativo.
+3. Clique em **Configurar** no topo para definir seu usuário, o nome da sua prova, a data da prova e sua meta diária.
+
+---
+
+## Estrutura dos Arquivos
+
+- `index.html` — Aplicação completa (interface responsiva, motor dinâmico, banco modelo de 80 questões e guia de assuntos).
+- `manifest.json` e `sw.js` — Configuração PWA e cache offline para uso em qualquer celular ou PC.
+- `docs/` — Imagens reais da aplicação (`desktop.png` e `mobile.png`).
+- `README.md` — Documentação do projeto e formato do pacote `.json`.
+
+---
+
+## Formato do Pacote de Concurso (`.json`)
 
 ```json
 {
