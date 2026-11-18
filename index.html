@@ -943,6 +943,7 @@
             </div>
             <div id="start-daily-wrap" style="margin-top: 14px; display:flex; gap:8px; flex-wrap:wrap;">
                 <button class="btn btn-primary" style="flex:1;" id="start-daily-btn" onclick="startSession('daily')">Iniciar Meta Diária (50 questões)</button>
+                <button class="btn btn-outline" onclick="startSession('model_micro')" title="Bloco rápido de 10 questões no estilo microtreino">Microtreino (10q)</button>
                 <button class="btn btn-outline" onclick="openSetupScreen()" title="Enviar arquivos ou trocar concurso">Trocar Concurso</button>
             </div>
         </div>
@@ -1094,7 +1095,7 @@
             </div>
         </div>
 
-        <div class="session-layout">
+        <div class="session-layout" id="session-layout">
             <div>
                 <div class="card" id="active-question-card"></div>
                 <div class="nav-controls">
@@ -1111,6 +1112,7 @@
                 <div class="answer-grid" id="answer-grid"></div>
             </aside>
         </div>
+        <div class="card hidden" id="session-summary-card"></div>
     </section>
 
     <footer id="main-footer" style="margin-top: 28px; padding: 16px 4px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 12.5px; color: var(--text-muted);">
@@ -2769,7 +2771,7 @@ function useDefaultModelAndStart() {
 }
 
 function getErrorQuestionIndices() {
-    const errSet = new Set();
+    const errSet = new Set(Array.isArray(appState.hardQuestions) ? appState.hardQuestions : []);
     Object.values(appState.dailyHistory || {}).forEach(d => {
         (d.questions || []).forEach(q => {
             if (!q.correct) errSet.add(q.qIndex);
@@ -2891,7 +2893,9 @@ function buildQuestionIndices(mode, subjectName) {
     }
     if (mode === 'model_balanced') return pickProportional(goal, false);
     if (mode === 'model_focus') return pickProportional(goal, true);
+    if (mode === 'model_micro') return pickProportional(10, false);
     if (mode === 'model_quick') return pickProportional(25, false);
+    if (mode === 'custom_list') return Array.isArray(subjectName) ? subjectName : [];
     if (mode === 'model_errors') {
         const errs = getErrorQuestionIndices().filter(i => i < activeQ.length);
         if (errs.length === 0) return [];
@@ -2918,7 +2922,9 @@ function startSession(mode, subjectName) {
         model_balanced: `Modelo A: Rotina Equilibrada (${indices.length}q)`,
         model_focus: `Modelo B: Foco Principal (${indices.length}q)`,
         model_errors: `Modelo C: Caderno de Erros (${indices.length}q)`,
-        model_quick: `Modelo D: Bloco Express (${indices.length}q)`
+        model_micro: `Microtreino Rápido (${indices.length}q)`,
+        model_quick: `Modelo D: Bloco Express (${indices.length}q)`,
+        custom_list: `Revisão de Erros (${indices.length}q)`
     };
     const title = titleMap[mode] || `Treino: ${subjectName}`;
 
@@ -2945,6 +2951,8 @@ function discardActiveSession() {
 
 function resumeSession() {
     if (!appState.activeSession) return;
+    document.getElementById('session-layout').classList.remove('hidden');
+    document.getElementById('session-summary-card').classList.add('hidden');
     switchTab('session');
     renderActiveQuestion();
     startTimers();
@@ -3043,6 +3051,17 @@ function renderActiveQuestion() {
         } else {
             html += `<div class="summary-box ok-box"><strong>Resposta Correta — Gabarito comentado:</strong><br>${escHtml(item.summary)}<div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;"><span style="font-size:12px;color:var(--green);">Tempo nesta questão: ${formatSec(s.times[pos])}</span><button class="btn btn-outline btn-sm" onclick="openTopicFromQuestion('${escHtml(subj)}')">Revisar assunto</button></div></div>`;
         }
+        const curRating = (s.ratings && s.ratings[qIdx]) || ((appState.hardQuestions || []).includes(qIdx) ? 'hard' : '');
+        html += `
+            <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+                <span style="font-size:12px;color:var(--text-muted);font-weight:600;">Como você avalia esta questão?</span>
+                <div style="display:flex;gap:6px;">
+                    <button class="filter-pill ${curRating === 'easy' ? 'active' : ''}" onclick="setQuestionDifficulty(${qIdx}, 'easy')">Fácil</button>
+                    <button class="filter-pill ${curRating === 'medium' ? 'active' : ''}" onclick="setQuestionDifficulty(${qIdx}, 'medium')">Médio</button>
+                    <button class="filter-pill ${curRating === 'hard' ? 'active' : ''}" onclick="setQuestionDifficulty(${qIdx}, 'hard')">Difícil</button>
+                </div>
+            </div>
+        `;
     }
     card.innerHTML = html;
     renderAnswerGrid();
@@ -3073,6 +3092,24 @@ function answerQuestion(optIndex) {
     });
     appState.dailyHistory[today].totalTimeSec += s.times[pos];
 
+    saveState();
+    renderActiveQuestion();
+}
+
+function setQuestionDifficulty(qIdx, level) {
+    if (!appState.hardQuestions) appState.hardQuestions = [];
+    const idx = appState.hardQuestions.indexOf(qIdx);
+    if (level === 'hard') {
+        if (idx === -1) appState.hardQuestions.push(qIdx);
+        showToast('Marcada como Difícil (salva na revisão).');
+    } else {
+        if (idx !== -1) appState.hardQuestions.splice(idx, 1);
+        showToast(`Avaliada como ${level === 'easy' ? 'Fácil' : 'Médio'}.`);
+    }
+    if (appState.activeSession) {
+        if (!appState.activeSession.ratings) appState.activeSession.ratings = {};
+        appState.activeSession.ratings[qIdx] = level;
+    }
     saveState();
     renderActiveQuestion();
 }
@@ -3144,13 +3181,78 @@ function finishSession() {
     const s = appState.activeSession;
     if (!s) return;
     const answered = s.answers.filter(a => a !== null).length;
-    if (answered < s.indices.length && !confirm(`Você respondeu ${answered} de ${s.indices.length} questões. Deseja encerrar esta sessão?`)) {
+    if (answered < s.indices.length && !confirm(`Você respondeu ${answered} de ${s.indices.length} questões. Deseja encerrar e ver sua avaliação?`)) {
         return;
     }
     stopTimers();
+
+    const activeQ = getActiveQuizData();
+    let hits = 0;
+    const wrongIndices = [];
+    const bySubj = {};
+
+    s.indices.forEach((qIdx, pos) => {
+        const ans = s.answers[pos];
+        if (ans === null) return;
+        const item = activeQ[qIdx];
+        const subj = item?.subject || 'Geral';
+        if (!bySubj[subj]) bySubj[subj] = { t: 0, h: 0 };
+        bySubj[subj].t++;
+        if (item && ans === item.answer) {
+            hits++;
+            bySubj[subj].h++;
+        } else {
+            wrongIndices.push(qIdx);
+        }
+    });
+
+    const pct = answered ? Math.round((hits / answered) * 100) : 0;
+    const avgSec = answered ? Math.round(s.totalTimeSec / answered) : 0;
+
     appState.activeSession = null;
     saveState();
-    switchTab('historico');
+
+    document.getElementById('session-layout').classList.add('hidden');
+    const sumCard = document.getElementById('session-summary-card');
+    sumCard.classList.remove('hidden');
+
+    const subjRows = Object.entries(bySubj).map(([subj, v]) => {
+        const sp = Math.round((v.h / v.t) * 100);
+        return `
+            <div style="margin-bottom:10px;">
+                <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;">
+                    <span>${escHtml(subj)}</span>
+                    <span>${v.h}/${v.t} (${sp}%)</span>
+                </div>
+                <div class="progress-track"><div class="progress-fill ${sp >= 70 ? 'green' : ''}" style="width:${sp}%"></div></div>
+            </div>
+        `;
+    }).join('');
+
+    window._lastSessionWrong = wrongIndices;
+
+    sumCard.innerHTML = `
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">Avaliação da Sessão</h2>
+                <p class="card-sub">${escHtml(s.title)}</p>
+            </div>
+            <span class="exam-tag" style="font-size:13px;">${pct}% de acerto</span>
+        </div>
+        <div class="stats-row">
+            <div class="stat-box"><div class="stat-val">${hits}/${answered}</div><div class="stat-lbl">Acertos</div></div>
+            <div class="stat-box"><div class="stat-val">${pct}%</div><div class="stat-lbl">Aproveitamento</div></div>
+            <div class="stat-box"><div class="stat-val">${formatSec(s.totalTimeSec)}</div><div class="stat-lbl">Tempo Total</div></div>
+            <div class="stat-box"><div class="stat-val">${formatSec(avgSec)}</div><div class="stat-lbl">Média / Questão</div></div>
+        </div>
+        ${subjRows ? `<div style="margin: 14px 0 18px;"><h3 style="font-size:13.5px;margin:0 0 10px;">Desempenho por Matéria</h3>${subjRows}</div>` : ''}
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            ${wrongIndices.length > 0 ? `<button class="btn btn-primary" onclick="startSession('custom_list', window._lastSessionWrong)">Refazer ${wrongIndices.length} ${wrongIndices.length === 1 ? 'erro' : 'erros'}</button>` : ''}
+            <button class="btn btn-outline" onclick="switchTab('historico')">Ver Histórico Diário</button>
+            <button class="btn btn-outline" onclick="switchTab('provas')">Voltar ao Menu</button>
+        </div>
+    `;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function renderHistoryTab() {
