@@ -3195,7 +3195,7 @@ function finishSession() {
         const ans = s.answers[pos];
         if (ans === null) return;
         const item = activeQ[qIdx];
-        const subj = item?.subject || 'Geral';
+        const subj = item?.subject || 'Conhecimentos Específicos';
         if (!bySubj[subj]) bySubj[subj] = { t: 0, h: 0 };
         bySubj[subj].t++;
         if (item && ans === item.answer) {
