@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#ffffff">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://formsubmit.co; object-src 'none'; base-uri 'self'; form-action 'none';">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta property="og:type" content="website">
     <meta property="og:title" content="ProjectConcurso — Plataforma Gratuita de Estudos para Concursos">
@@ -1169,10 +1169,13 @@
 
     <footer id="main-footer" style="margin-top: 28px; padding: 16px 4px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 12.5px; color: var(--text-muted);">
         <span><strong>ProjectConcurso</strong> • Gratuito e offline (PWA) • Criado por <strong>Matheus Goes</strong></span>
-        <a href="https://github.com/matheusbgoes/ProjectConcurso" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--text); text-decoration: none; font-weight: 600;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.25.45-2.28 1.19-3.08-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.18 1.18a11.07 11.07 0 0 1 5.78 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.58.23 2.75.11 3.04.74.8 1.19 1.83 1.19 3.08 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14 0 1.55-.01 2.8-.01 3.18 0 .31.21.67.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
-            GitHub do Projeto
-        </a>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="openFeedbackModal()" style="min-height:30px;padding:4px 11px;border-radius:999px;">Enviar Feedback</button>
+            <a href="https://github.com/matheusbgoes/ProjectConcurso" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--text); text-decoration: none; font-weight: 600;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.25.45-2.28 1.19-3.08-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.18 1.18a11.07 11.07 0 0 1 5.78 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.58.23 2.75.11 3.04.74.8 1.19 1.83 1.19 3.08 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14 0 1.55-.01 2.8-.01 3.18 0 .31.21.67.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+                GitHub do Projeto
+            </a>
+        </div>
     </footer>
 </main>
 
@@ -1282,6 +1285,39 @@
             <button class="btn btn-outline btn-sm" onclick="downloadShareCard()">Baixar Card (.png)</button>
             <button class="btn btn-outline btn-sm" onclick="exportExamPackage()">Enviar Prova (.json)</button>
         </div>
+    </div>
+</div>
+
+<div class="modal-backdrop" id="feedback-modal">
+    <div class="modal-box" style="max-width: 440px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <h3 class="card-title">Enviar Feedback</h3>
+            <button class="btn btn-outline btn-sm" onclick="closeFeedbackModal()" style="min-height:30px;padding:2px 10px;">✕</button>
+        </div>
+        <p class="card-sub" style="margin-bottom:12px;">Sua opinião ajuda a melhorar o ProjectConcurso para todos os estudantes.</p>
+        <form id="feedback-form" onsubmit="submitFeedback(event)">
+            <label style="font-size:12.5px;font-weight:600;">Tipo de Feedback</label>
+            <select class="search-input" id="fb-type" style="margin-top:4px;">
+                <option value="Sugestão de melhoria">Sugestão de melhoria</option>
+                <option value="Reportar erro / bug">Reportar erro / bug</option>
+                <option value="Sugerir novo concurso">Sugerir novo concurso</option>
+                <option value="Elogio">Elogio</option>
+            </select>
+
+            <label style="font-size:12.5px;font-weight:600;">Seu Nome</label>
+            <input type="text" class="search-input" id="fb-name" placeholder="Seu nome" required style="margin-top:4px;">
+
+            <label style="font-size:12.5px;font-weight:600;">Seu E-mail (opcional, para resposta)</label>
+            <input type="email" class="search-input" id="fb-reply" placeholder="seuemail@exemplo.com" style="margin-top:4px;">
+
+            <label style="font-size:12.5px;font-weight:600;">Mensagem</label>
+            <textarea class="search-input" id="fb-message" rows="4" required placeholder="Descreva sua sugestão, dúvida ou problema encontrado..." style="margin-top:4px;resize:vertical;font-family:inherit;"></textarea>
+
+            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px;">
+                <button type="button" class="btn btn-outline btn-sm" onclick="closeFeedbackModal()">Cancelar</button>
+                <button type="submit" class="btn btn-primary btn-sm" id="fb-submit-btn">Enviar Feedback</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -4003,6 +4039,56 @@ function exportExamPackage() {
     a.click();
     URL.revokeObjectURL(url);
     showToast('Pacote da prova exportado (.json)!');
+}
+
+function openFeedbackModal() {
+    document.getElementById('fb-name').value = (appState && appState.userName) ? appState.userName : '';
+    document.getElementById('fb-message').value = '';
+    document.getElementById('feedback-modal').classList.add('open');
+}
+
+function closeFeedbackModal() {
+    document.getElementById('feedback-modal').classList.remove('open');
+}
+
+async function submitFeedback(e) {
+    e.preventDefault();
+    const btn = document.getElementById('fb-submit-btn');
+    const type = document.getElementById('fb-type').value;
+    const name = document.getElementById('fb-name').value.trim();
+    const reply = document.getElementById('fb-reply').value.trim();
+    const message = document.getElementById('fb-message').value.trim();
+    if (!message) return;
+
+    btn.disabled = true;
+    btn.innerText = 'Enviando...';
+
+    const target = atob('bWF0ZXVzZzk2QGhvdG1haWwuY29t');
+    try {
+        const payload = {
+            _subject: `[ProjectConcurso] ${type} — ${name}`,
+            categoria: type,
+            nome: name,
+            concurso_ativo: (appState && appState.examName) ? appState.examName : 'N/A',
+            mensagem: message,
+            _template: 'table'
+        };
+        if (reply) payload._replyto = reply;
+
+        const res = await fetch(`https://formsubmit.co/ajax/${target}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        closeFeedbackModal();
+        showToast('Feedback enviado! Obrigado por contribuir.');
+    } catch (err) {
+        showToast('Sem conexão para enviar agora. Tente novamente online.');
+    } finally {
+        btn.disabled = false;
+        btn.innerText = 'Enviar Feedback';
+    }
 }
 
 window.onload = () => {
