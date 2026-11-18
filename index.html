@@ -825,6 +825,7 @@
             </button>
             <button class="btn btn-outline btn-sm" onclick="openConfigModal('profile')" title="Configurar perfil, concurso ou IA" style="min-height:32px;padding:4px 10px;">Configurar</button>
             <button class="btn btn-outline btn-sm" id="theme-btn" onclick="toggleDarkMode()" title="Alternar tema claro/escuro" style="min-height:32px;padding:4px 10px;">Escuro</button>
+            <button class="btn btn-outline btn-sm" onclick="logoutUser()" title="Sair da conta" style="min-height:32px;padding:4px 10px;">Sair</button>
         </div>
     </div>
 </header>
@@ -838,6 +839,49 @@
 </nav>
 
 <main class="container">
+    <!-- TAB: LOGIN / CADASTRO -->
+    <section id="tab-auth" class="hidden">
+        <div class="card" style="max-width: 440px; margin: 28px auto; border-top: 4px solid var(--accent);">
+            <div style="text-align:center; margin-bottom: 18px;">
+                <h2 style="font-size: 20px; font-weight: 700; margin: 0 0 6px;">ProjectConcurso</h2>
+                <p class="card-sub" style="margin:0;">Cada usuário com suas provas, histórico e metas.</p>
+            </div>
+
+            <div class="seg-control" style="display:flex; width:100%; margin-bottom: 16px;">
+                <button class="seg-btn active" id="auth-seg-login" style="flex:1;" onclick="switchAuthMode('login')">Entrar</button>
+                <button class="seg-btn" id="auth-seg-register" style="flex:1;" onclick="switchAuthMode('register')">Criar Conta</button>
+            </div>
+
+            <form id="auth-login-form" onsubmit="handleLogin(event)">
+                <label style="font-size:12.5px;font-weight:600;">Usuário ou E-mail</label>
+                <input type="text" class="search-input" id="login-username" placeholder="Ex: matheus" required style="margin-top:4px;">
+
+                <label style="font-size:12.5px;font-weight:600;">Senha</label>
+                <input type="password" class="search-input" id="login-password" placeholder="Sua senha" required style="margin-top:4px;">
+
+                <button type="submit" class="btn btn-primary btn-full">Entrar na Minha Conta</button>
+            </form>
+
+            <form id="auth-register-form" class="hidden" onsubmit="handleRegister(event)">
+                <label style="font-size:12.5px;font-weight:600;">Seu Nome</label>
+                <input type="text" class="search-input" id="reg-name" placeholder="Ex: Matheus Goes" required style="margin-top:4px;">
+
+                <label style="font-size:12.5px;font-weight:600;">Usuário ou E-mail</label>
+                <input type="text" class="search-input" id="reg-username" placeholder="Ex: matheus" required style="margin-top:4px;">
+
+                <label style="font-size:12.5px;font-weight:600;">Senha (mín. 4 caracteres)</label>
+                <input type="password" class="search-input" id="reg-password" minlength="4" placeholder="Crie uma senha" required style="margin-top:4px;">
+
+                <button type="submit" class="btn btn-primary btn-full">Criar Conta e Começar</button>
+            </form>
+
+            <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border); text-align:center;">
+                <button type="button" class="btn btn-outline btn-full btn-sm" onclick="enterAsGuest()">Continuar sem conta (Visitante)</button>
+                <p style="font-size:11.5px;color:var(--text-muted);margin:10px 0 0;">Dados salvos com segurança localmente neste navegador.</p>
+            </div>
+        </div>
+    </section>
+
     <!-- TAB: SETUP INICIAL / MONTAGEM DA PROVA -->
     <section id="tab-setup" class="hidden">
         <div class="card" style="border-top: 4px solid var(--accent);">
@@ -2575,17 +2619,129 @@ function restoreDefaultPackage() {
     showToast('Pacote modelo padrão restaurado!');
 }
 
+async function hashPassword(password, salt) {
+    const data = new TextEncoder().encode(`${salt}:${password}`);
+    if (window.crypto && crypto.subtle) {
+        const buf = await crypto.subtle.digest('SHA-256', data);
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+    let h = 0;
+    for (let i = 0; i < data.length; i++) h = ((h << 5) - h + data[i]) | 0;
+    return 'fb_' + Math.abs(h).toString(16);
+}
+
+function switchAuthMode(mode) {
+    const isLogin = mode === 'login';
+    document.getElementById('auth-login-form').classList.toggle('hidden', !isLogin);
+    document.getElementById('auth-register-form').classList.toggle('hidden', isLogin);
+    document.getElementById('auth-seg-login').classList.toggle('active', isLogin);
+    document.getElementById('auth-seg-register').classList.toggle('active', !isLogin);
+}
+
+async function handleRegister(e) {
+    e.preventDefault();
+    const name = document.getElementById('reg-name').value.trim();
+    const username = document.getElementById('reg-username').value.trim().toLowerCase();
+    const password = document.getElementById('reg-password').value;
+    if (!name || !username || password.length < 4) {
+        showToast('Preencha nome, usuário e senha (mín. 4 caracteres).');
+        return;
+    }
+    const exists = Object.values(profilesStore.profiles).some(p => (p.username || '').toLowerCase() === username);
+    if (exists) {
+        showToast('Este usuário já existe. Escolha outro ou faça login.');
+        return;
+    }
+    const id = 'u_' + Date.now();
+    const salt = Math.random().toString(36).slice(2, 10);
+    const passwordHash = await hashPassword(password, salt);
+    const profile = createEmptyProfile(name);
+    profile.username = username;
+    profile.salt = salt;
+    profile.passwordHash = passwordHash;
+
+    profilesStore.profiles[id] = profile;
+    profilesStore.activeProfileId = id;
+    profilesStore.isAuthenticated = true;
+    appState = profile;
+    saveState();
+
+    document.getElementById('reg-password').value = '';
+    updateHeaderBrand();
+    updateCountdown();
+    openSetupScreen();
+    showToast(`Conta criada! Bem-vindo(a), ${name}.`);
+}
+
+async function handleLogin(e) {
+    e.preventDefault();
+    const username = document.getElementById('login-username').value.trim().toLowerCase();
+    const password = document.getElementById('login-password').value;
+    const entry = Object.entries(profilesStore.profiles).find(([, p]) => (p.username || '').toLowerCase() === username);
+    if (!entry) {
+        showToast('Usuário não encontrado.');
+        return;
+    }
+    const [id, profile] = entry;
+    const hash = await hashPassword(password, profile.salt || '');
+    if (hash !== profile.passwordHash) {
+        showToast('Senha incorreta.');
+        return;
+    }
+    profilesStore.activeProfileId = id;
+    profilesStore.isAuthenticated = true;
+    appState = profile;
+    saveState();
+
+    document.getElementById('login-password').value = '';
+    updateHeaderBrand();
+    updateCountdown();
+    if (!appState.hasConfigured && Object.keys(appState.dailyHistory || {}).length === 0) {
+        openSetupScreen();
+    } else {
+        switchTab('provas');
+    }
+    showToast(`Olá, ${appState.userName}!`);
+}
+
+function enterAsGuest() {
+    if (!profilesStore.profiles.p_default) {
+        profilesStore.profiles.p_default = createEmptyProfile('Visitante');
+    }
+    profilesStore.activeProfileId = 'p_default';
+    profilesStore.isAuthenticated = true;
+    appState = profilesStore.profiles.p_default;
+    saveState();
+    updateHeaderBrand();
+    updateCountdown();
+    if (!appState.hasConfigured && Object.keys(appState.dailyHistory || {}).length === 0) {
+        openSetupScreen();
+    } else {
+        switchTab('provas');
+    }
+}
+
+function logoutUser() {
+    stopTimers();
+    profilesStore.isAuthenticated = false;
+    localStorage.setItem(PROFILES_KEY, JSON.stringify(profilesStore));
+    switchTab('auth');
+    showToast('Você saiu da conta.');
+}
+
 function switchTab(tabName) {
     if (tabName !== 'session') stopTimers();
-    ['setup', 'provas', 'assuntos', 'historico', 'semanal', 'dicas', 'session'].forEach(t => {
+    ['auth', 'setup', 'provas', 'assuntos', 'historico', 'semanal', 'dicas', 'session'].forEach(t => {
         document.getElementById(`tab-${t}`).classList.add('hidden');
     });
     document.getElementById(`tab-${tabName}`).classList.remove('hidden');
 
     const inSession = tabName === 'session';
-    const hideNav = inSession || tabName === 'setup';
-    document.getElementById('main-topbar').classList.toggle('hidden', inSession);
-    document.getElementById('main-footer').classList.toggle('hidden', inSession);
+    const inAuth = tabName === 'auth';
+    const hideChrome = inSession || inAuth;
+    const hideNav = hideChrome || tabName === 'setup';
+    document.getElementById('main-topbar').classList.toggle('hidden', hideChrome);
+    document.getElementById('main-footer').classList.toggle('hidden', hideChrome);
     document.getElementById('desktop-nav').classList.toggle('hidden', hideNav);
     document.getElementById('mobile-nav').classList.toggle('hidden', hideNav);
 
@@ -3822,8 +3978,11 @@ window.onload = () => {
         });
     }
     const hasHistory = Object.keys(appState.dailyHistory || {}).length > 0;
-    if (!appState.hasConfigured && !hasHistory) {
-        openSetupScreen();
+    const hasRegisteredUsers = Object.values(profilesStore.profiles).some(p => Boolean(p.passwordHash));
+    if (profilesStore.isAuthenticated === false || (hasRegisteredUsers && !profilesStore.isAuthenticated)) {
+        switchTab('auth');
+    } else if (!appState.hasConfigured && !hasHistory) {
+        switchTab('auth');
     } else {
         switchTab('provas');
     }
