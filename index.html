@@ -58,13 +58,44 @@
             border-bottom: 1px solid var(--border);
         }
         .topbar-inner {
-            max-width: 980px;
+            max-width: 860px;
             margin: auto;
-            padding: 12px 16px;
+            padding: 10px 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 12px;
+            gap: 10px;
+        }
+        .brand { min-width: 0; }
+        .brand h1 { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .desktop-nav, .container { max-width: 860px; }
+        .seg-control {
+            display: inline-flex;
+            background: var(--surface-alt);
+            padding: 3px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            gap: 2px;
+        }
+        .seg-btn {
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 12.5px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .seg-btn.active {
+            background: var(--surface);
+            color: var(--text);
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+        }
+        @media (max-width: 540px) {
+            .topbar-actions { gap: 4px !important; }
+            .countdown-pill { display: none; }
         }
         .brand {
             display: flex;
@@ -788,12 +819,10 @@
             <h1 id="brand-title">ProjectConcurso • Simulado Modelo</h1>
             <span id="brand-user" onclick="openConfigModal('users')" style="cursor:pointer;" title="Clique para trocar ou criar seu usuário exclusivo">Olá, Estudante • <small style="opacity:0.8;">por Matheus Goes</small></span>
         </div>
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+        <div class="topbar-actions" style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
             <button class="countdown-pill" id="countdown-pill" onclick="openConfigModal('profile')" title="Clique para ajustar a data da prova">
-                Definir data da prova
+                Definir data
             </button>
-            <button class="btn btn-outline btn-sm" onclick="openSetupScreen()" title="Montar novo concurso com arquivos" style="min-height:32px;padding:4px 10px;">Novo Concurso</button>
-            <button class="btn btn-outline btn-sm" onclick="openShareModal()" title="Compartilhar resultado ou prova" style="min-height:32px;padding:4px 10px;">Compartilhar</button>
             <button class="btn btn-outline btn-sm" onclick="openConfigModal('profile')" title="Configurar perfil, concurso ou IA" style="min-height:32px;padding:4px 10px;">Configurar</button>
             <button class="btn btn-outline btn-sm" id="theme-btn" onclick="toggleDarkMode()" title="Alternar tema claro/escuro" style="min-height:32px;padding:4px 10px;">Escuro</button>
         </div>
@@ -888,18 +917,6 @@
 
     <!-- TAB: PROVAS (MENU PRINCIPAL) -->
     <section id="tab-provas">
-        <div class="guide-banner" id="onboarding-banner">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
-                <strong style="font-size:14px;">Comece em 3 passos simples</strong>
-                <button class="btn btn-outline btn-sm" onclick="dismissOnboarding()" style="min-height:28px;padding:2px 10px;font-size:12px;">Entendi</button>
-            </div>
-            <div class="guide-steps">
-                <div class="guide-step"><strong>1. Defina sua prova</strong>Clique em <em>Configurar</em> no topo para colocar seu nome, concurso, data e meta diária (ou gerar questões com IA).</div>
-                <div class="guide-step"><strong>2. Resolva o bloco diário</strong>Faça sua meta diária no celular ou PC. Se sair no meio, seu progresso fica salvo para continuar depois.</div>
-                <div class="guide-step"><strong>3. Revise seus erros</strong>Veja na hora o motivo do erro, consulte a aba <em>Assuntos</em> e acompanhe sua média semanal.</div>
-            </div>
-        </div>
-
         <div class="card">
             <div class="card-header">
                 <div>
@@ -907,7 +924,7 @@
                     <p class="card-sub" id="daily-goal-sub">0 de 50 questões concluídas hoje</p>
                 </div>
                 <div style="display:flex;gap:6px;align-items:center;">
-                    <span class="exam-tag" id="streak-tag" title="Dias seguidos estudando">0 dias seguidos</span>
+                    <span class="exam-tag" id="streak-tag" title="Dias seguidos estudando">0d seguidos</span>
                     <span class="exam-tag" id="daily-pct-tag">0%</span>
                 </div>
             </div>
@@ -924,51 +941,50 @@
                     <button class="btn btn-primary btn-sm" onclick="resumeSession()">Continuar</button>
                 </div>
             </div>
-            <div id="start-daily-wrap" style="margin-top: 14px;">
-                <button class="btn btn-primary btn-full" id="start-daily-btn" onclick="startSession('daily')">Iniciar Meta Diária (50 questões)</button>
+            <div id="start-daily-wrap" style="margin-top: 14px; display:flex; gap:8px; flex-wrap:wrap;">
+                <button class="btn btn-primary" style="flex:1;" id="start-daily-btn" onclick="startSession('daily')">Iniciar Meta Diária (50 questões)</button>
+                <button class="btn btn-outline" onclick="openSetupScreen()" title="Enviar arquivos ou trocar concurso">Trocar Concurso</button>
             </div>
         </div>
 
         <div class="card">
-            <div class="card-header">
+            <div class="card-header" style="flex-wrap:wrap;">
                 <div>
-                    <h2 class="card-title">Modelos de Provas Diárias (Até a Prova)</h2>
-                    <p class="card-sub">Combinações prontas com todas as matérias do concurso ativo</p>
+                    <h2 class="card-title">Simulados e Treinos</h2>
+                    <p class="card-sub">Escolha um modelo diário ou treine uma matéria específica</p>
+                </div>
+                <div class="seg-control">
+                    <button class="seg-btn active" id="seg-rotina" onclick="switchProvasView('rotina')">Rotina Diária</button>
+                    <button class="seg-btn" id="seg-materias" onclick="switchProvasView('materias')">Por Matéria</button>
                 </div>
             </div>
-            <div class="exam-grid two-col">
+
+            <div id="provas-view-rotina" class="exam-grid two-col">
                 <button class="exam-option" onclick="startSession('model_balanced')">
                     <span class="exam-tag" id="model-a-tag">Meta Diária • Proporcional</span>
                     <h3>Modelo A: Rotina Equilibrada</h3>
-                    <p>Mistura todas as matérias na proporção real do concurso ativo para manter tudo em dia.</p>
+                    <p>Todas as matérias na proporção real do concurso.</p>
                 </button>
                 <button class="exam-option" onclick="startSession('model_focus')">
                     <span class="exam-tag">Meta Diária • Peso Maior</span>
-                    <h3>Modelo B: Foco na Matéria Principal</h3>
-                    <p>Prioriza a disciplina com maior peso e complementa com as demais matérias.</p>
+                    <h3>Modelo B: Foco Principal</h3>
+                    <p>Prioriza a disciplina principal e complementa com as demais.</p>
                 </button>
                 <button class="exam-option" onclick="startSession('model_errors')">
                     <span class="exam-tag" id="errors-count-tag">Revisão Inteligente</span>
                     <h3>Modelo C: Caderno de Erros</h3>
-                    <p>Gera um simulado focado apenas nas questões que você errou ou marcou para revisão.</p>
+                    <p>Simulado focado nas questões que você errou.</p>
                 </button>
                 <button class="exam-option" onclick="startSession('model_quick')">
                     <span class="exam-tag">25 Questões • Rápido</span>
-                    <h3>Modelo D: Bloco Express (Celular)</h3>
-                    <p>Sessão curta e equilibrada para estudar no celular em dias mais corridos.</p>
+                    <h3>Modelo D: Bloco Express</h3>
+                    <p>Sessão curta ideal para dias corridos no celular.</p>
                 </button>
             </div>
-        </div>
 
-        <div class="card">
-            <div class="card-header">
-                <div>
-                    <h2 class="card-title">Prova Completa e Treinos por Matéria</h2>
-                    <p class="card-sub">Gerado automaticamente a partir do concurso selecionado</p>
-                </div>
-                <button class="btn btn-outline btn-sm" onclick="openConfigModal('ai')">Trocar Concurso</button>
+            <div id="provas-view-materias" class="exam-grid hidden">
+                <div id="subject-train-grid" style="display:contents;"></div>
             </div>
-            <div class="exam-grid" id="subject-train-grid"></div>
         </div>
     </section>
 
@@ -2776,6 +2792,14 @@ function getStreakDays() {
         d.setDate(d.getDate() - 1);
     }
     return streak;
+}
+
+function switchProvasView(view) {
+    const isRotina = view === 'rotina';
+    document.getElementById('provas-view-rotina').classList.toggle('hidden', !isRotina);
+    document.getElementById('provas-view-materias').classList.toggle('hidden', isRotina);
+    document.getElementById('seg-rotina').classList.toggle('active', isRotina);
+    document.getElementById('seg-materias').classList.toggle('active', !isRotina);
 }
 
 function renderProvasTab() {
