@@ -852,12 +852,17 @@
                 <button class="seg-btn" id="auth-seg-register" style="flex:1;" onclick="switchAuthMode('register')">Criar Conta</button>
             </div>
 
+            <div id="auth-error-msg" class="error-box hidden" style="margin-top:0;margin-bottom:12px;"></div>
+
             <form id="auth-login-form" onsubmit="handleLogin(event)">
                 <label style="font-size:12.5px;font-weight:600;">Usuário ou E-mail</label>
                 <input type="text" class="search-input" id="login-username" placeholder="Ex: matheus" required style="margin-top:4px;">
 
                 <label style="font-size:12.5px;font-weight:600;">Senha</label>
-                <input type="password" class="search-input" id="login-password" placeholder="Sua senha" required style="margin-top:4px;">
+                <div style="display:flex;gap:6px;margin-top:4px;margin-bottom:12px;">
+                    <input type="password" class="search-input" id="login-password" placeholder="Sua senha" required style="margin:0;flex:1;">
+                    <button type="button" class="btn btn-outline btn-sm" onclick="togglePassVis('login-password', this)" style="min-height:40px;">Mostrar</button>
+                </div>
 
                 <button type="submit" class="btn btn-primary btn-full">Entrar na Minha Conta</button>
             </form>
@@ -870,14 +875,17 @@
                 <input type="text" class="search-input" id="reg-username" placeholder="Ex: matheus" required style="margin-top:4px;">
 
                 <label style="font-size:12.5px;font-weight:600;">Senha (mín. 4 caracteres)</label>
-                <input type="password" class="search-input" id="reg-password" minlength="4" placeholder="Crie uma senha" required style="margin-top:4px;">
+                <div style="display:flex;gap:6px;margin-top:4px;margin-bottom:12px;">
+                    <input type="password" class="search-input" id="reg-password" minlength="4" placeholder="Crie uma senha" required style="margin:0;flex:1;">
+                    <button type="button" class="btn btn-outline btn-sm" onclick="togglePassVis('reg-password', this)" style="min-height:40px;">Mostrar</button>
+                </div>
 
                 <button type="submit" class="btn btn-primary btn-full">Criar Conta e Começar</button>
             </form>
 
             <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border); text-align:center;">
                 <button type="button" class="btn btn-outline btn-full btn-sm" onclick="enterAsGuest()">Continuar sem conta (Visitante)</button>
-                <p style="font-size:11.5px;color:var(--text-muted);margin:10px 0 0;">Dados salvos com segurança localmente neste navegador.</p>
+                <p style="font-size:11.5px;color:var(--text-muted);margin:10px 0 0;">Contas salvas localmente neste navegador (sem recuperação remota de senha).</p>
             </div>
         </div>
     </section>
@@ -933,7 +941,7 @@
                 <div class="card-header">
                     <div>
                         <h3 class="card-title">2. Seus Dados e Meta</h3>
-                        <p class="card-sub">Sem login ou senha — salvo direto no seu aparelho</p>
+                        <p class="card-sub">Salvo com segurança na sua conta neste aparelho</p>
                     </div>
                 </div>
                 <label style="font-size:12.5px;font-weight:600;">Seu Nome</label>
@@ -1160,7 +1168,7 @@
     </section>
 
     <footer id="main-footer" style="margin-top: 28px; padding: 16px 4px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 12.5px; color: var(--text-muted);">
-        <span><strong>ProjectConcurso</strong> • Gratuito, sem login e offline (PWA) • Criado por <strong>Matheus Goes</strong></span>
+        <span><strong>ProjectConcurso</strong> • Gratuito e offline (PWA) • Criado por <strong>Matheus Goes</strong></span>
         <a href="https://github.com/matheusbgoes/ProjectConcurso" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--text); text-decoration: none; font-weight: 600;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.25.45-2.28 1.19-3.08-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.18 1.18a11.07 11.07 0 0 1 5.78 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.58.23 2.75.11 3.04.74.8 1.19 1.83 1.19 3.08 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14 0 1.55-.01 2.8-.01 3.18 0 .31.21.67.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
             GitHub do Projeto
@@ -2630,7 +2638,37 @@ async function hashPassword(password, salt) {
     return 'fb_' + Math.abs(h).toString(16);
 }
 
+function showAuthError(msg) {
+    const el = document.getElementById('auth-error-msg');
+    if (!el) return;
+    if (!msg) {
+        el.classList.add('hidden');
+        el.innerText = '';
+    } else {
+        el.innerText = msg;
+        el.classList.remove('hidden');
+    }
+}
+
+function togglePassVis(inputId, btn) {
+    const inp = document.getElementById(inputId);
+    if (!inp) return;
+    const show = inp.type === 'password';
+    inp.type = show ? 'text' : 'password';
+    btn.innerText = show ? 'Ocultar' : 'Mostrar';
+}
+
+function resetAuthForm() {
+    ['login-username', 'login-password', 'reg-name', 'reg-username', 'reg-password'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    showAuthError('');
+    switchAuthMode('login');
+}
+
 function switchAuthMode(mode) {
+    showAuthError('');
     const isLogin = mode === 'login';
     document.getElementById('auth-login-form').classList.toggle('hidden', !isLogin);
     document.getElementById('auth-register-form').classList.toggle('hidden', isLogin);
@@ -2640,16 +2678,17 @@ function switchAuthMode(mode) {
 
 async function handleRegister(e) {
     e.preventDefault();
+    showAuthError('');
     const name = document.getElementById('reg-name').value.trim();
     const username = document.getElementById('reg-username').value.trim().toLowerCase();
     const password = document.getElementById('reg-password').value;
     if (!name || !username || password.length < 4) {
-        showToast('Preencha nome, usuário e senha (mín. 4 caracteres).');
+        showAuthError('Preencha nome, usuário e senha (mínimo 4 caracteres).');
         return;
     }
     const exists = Object.values(profilesStore.profiles).some(p => (p.username || '').toLowerCase() === username);
     if (exists) {
-        showToast('Este usuário já existe. Escolha outro ou faça login.');
+        showAuthError('Este usuário já existe. Escolha outro ou faça login.');
         return;
     }
     const id = 'u_' + Date.now();
@@ -2666,7 +2705,7 @@ async function handleRegister(e) {
     appState = profile;
     saveState();
 
-    document.getElementById('reg-password').value = '';
+    resetAuthForm();
     updateHeaderBrand();
     updateCountdown();
     openSetupScreen();
@@ -2675,17 +2714,18 @@ async function handleRegister(e) {
 
 async function handleLogin(e) {
     e.preventDefault();
+    showAuthError('');
     const username = document.getElementById('login-username').value.trim().toLowerCase();
     const password = document.getElementById('login-password').value;
     const entry = Object.entries(profilesStore.profiles).find(([, p]) => (p.username || '').toLowerCase() === username);
     if (!entry) {
-        showToast('Usuário não encontrado.');
+        showAuthError('Usuário não encontrado.');
         return;
     }
     const [id, profile] = entry;
     const hash = await hashPassword(password, profile.salt || '');
     if (hash !== profile.passwordHash) {
-        showToast('Senha incorreta.');
+        showAuthError('Senha incorreta.');
         return;
     }
     profilesStore.activeProfileId = id;
@@ -2693,7 +2733,7 @@ async function handleLogin(e) {
     appState = profile;
     saveState();
 
-    document.getElementById('login-password').value = '';
+    resetAuthForm();
     updateHeaderBrand();
     updateCountdown();
     if (!appState.hasConfigured && Object.keys(appState.dailyHistory || {}).length === 0) {
@@ -2712,6 +2752,7 @@ function enterAsGuest() {
     profilesStore.isAuthenticated = true;
     appState = profilesStore.profiles.p_default;
     saveState();
+    resetAuthForm();
     updateHeaderBrand();
     updateCountdown();
     if (!appState.hasConfigured && Object.keys(appState.dailyHistory || {}).length === 0) {
@@ -2725,6 +2766,7 @@ function logoutUser() {
     stopTimers();
     profilesStore.isAuthenticated = false;
     localStorage.setItem(PROFILES_KEY, JSON.stringify(profilesStore));
+    resetAuthForm();
     switchTab('auth');
     showToast('Você saiu da conta.');
 }
